@@ -33,10 +33,31 @@ const Palette: React.FC<PaletteProps> = ({ customNodeDefs, onAddCustomNodeDef })
     e.dataTransfer.setData('node-type', type)
   }
 
+  // Always-present node definitions
+  const builtInNodes = [
+    { name: 'Source', inputs: [], outputs: ['out'] },
+    { name: 'Sink', inputs: ['in'], outputs: [] },
+  ]
+
   return (
     <div style={{ width: '30vw', minWidth: 200, maxWidth: 400, background: '#f4f4f4', borderRight: '1px solid #ccc', padding: 16, boxSizing: 'border-box', height: '100vh', overflowY: 'auto', marginTop: 48 }}>
       <h3>Palette</h3>
       <button onClick={handleNewNode} style={{ marginBottom: 16 }}>New Node</button>
+      {/* Built-in nodes */}
+      {builtInNodes.map((node, idx) => (
+        <div
+          key={node.name + idx}
+          draggable
+          onDragStart={e => handleDragStart(e, node.name)}
+          style={{ margin: '8px 0', padding: 8, background: '#fff', border: '1px solid #aaa', borderRadius: 4, cursor: 'grab' }}
+        >
+          <span style={{ fontStyle: 'italic' }}>{node.name}</span>
+          <div style={{ fontSize: 12, color: '#888' }}>
+            In: {node.inputs.join(', ') || 'none'}<br />
+            Out: {node.outputs.join(', ') || 'none'}
+          </div>
+        </div>
+      ))}
       {/* Custom nodes */}
       {customNodeDefs.map((node, idx) => (
         <div
