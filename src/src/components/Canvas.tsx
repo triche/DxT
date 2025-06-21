@@ -156,8 +156,12 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onDese
       {nodes.map(node => {
         // Get port names from node properties (default to 1 input/output for example node)
         function getPorts(props: Record<string, unknown>, key: 'inputs' | 'outputs'): string[] {
-          const val = props[key]
-          return Array.isArray(val) && val.every(p => typeof p === 'string') ? val as string[] : [key === 'inputs' ? 'in' : 'out']
+          const val = props[key];
+          if (Array.isArray(val) && val.every(p => typeof p === 'string')) {
+            return val as string[];
+          }
+          // Only default if the property is missing (not present at all)
+          return [];
         }
         const inputs = getPorts(node.properties, 'inputs')
         const outputs = getPorts(node.properties, 'outputs')
@@ -192,7 +196,7 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onDese
             <div>{name || node.type}</div>
             <div style={{ color: '#888', fontSize: 12, marginTop: 2, fontStyle: 'italic' }}>{node.type}</div>
             {/* Output connectors as blue lollipops, interactive for wiring */}
-            {outputs.map((port, i) => {
+            {outputs.length > 0 && outputs.map((port, i) => {
               const isConnected = wires.some(w => w.fromNodeId === node.id && w.fromPortIdx === i)
               return (
                 <div
@@ -226,7 +230,7 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onDese
               )
             })}
             {/* Input connectors as green lollipops, interactive for wiring completion */}
-            {inputs.map((port, i) => {
+            {inputs.length > 0 && inputs.map((port, i) => {
               const isConnected = wires.some(w => w.toNodeId === node.id && w.toPortIdx === i)
               return (
                 <div

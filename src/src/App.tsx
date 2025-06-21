@@ -53,15 +53,20 @@ function App() {
 
   // Handler for dropping a node from the palette
   const handleDropNode = (type: string, x: number, y: number) => {
-    // Look up custom node definition
-    const customDef = customNodeDefs.find(def => def.name === type)
+    // Built-in node definitions
+    const builtInDefs = [
+      { name: 'Source', inputs: [], outputs: ['out'] },
+      { name: 'Sink', inputs: ['in'], outputs: [] },
+    ];
+    // Look up node definition in built-in and custom node defs
+    const def = [...builtInDefs, ...customNodeDefs].find(d => d.name === type)
     setNodes([...nodes, {
       id: `node-${Date.now()}`,
       type,
       x,
       y,
-      properties: customDef
-        ? { name: type, inputs: customDef.inputs, outputs: customDef.outputs }
+      properties: def
+        ? { name: type, inputs: def.inputs, outputs: def.outputs }
         : { name: type },
     }])
   }
