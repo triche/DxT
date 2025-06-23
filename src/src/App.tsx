@@ -46,6 +46,9 @@ function App() {
   } | null>(null)
   const [diagramName, setDiagramName] = useState<string>('Untitled Diagram')
 
+  // Clipboard for copy/paste
+  const [clipboard, setClipboard] = useState<NodeType[] | null>(null)
+
   // Handler to add a new custom node type
   const handleAddCustomNodeDef = (def: NodeTypeDef) => {
     setCustomNodeDefs(defs => [...defs, def])
@@ -192,12 +195,50 @@ function App() {
     setShowPropertyModal(false)
   }
 
-  // Delete node(s)
-  const handleDeleteNodes = (nodeIds: string[]) => {
-    setNodes(nodes => nodes.filter(n => !nodeIds.includes(n.id)))
-    setSelectedNodeIds(ids => ids.filter(id => !nodeIds.includes(id)))
-    setContextMenu(null)
-  }
+  // Copy selected nodes
+  const handleCopyNodes = () => {
+    if (selectedNodeIds.length === 0) return;
+    const selectedNodes = nodes.filter(n => selectedNodeIds.includes(n.id));
+    setClipboard(selectedNodes.map(n => ({ ...n })));
+  };
+
+  // Paste nodes
+  const handlePasteNodes = () => {
+    if (!clipboard || clipboard.length === 0) return;
+    // Offset pasted nodes so they don't overlap
+    const offset = 40;
+    const now = Date.now();
+    const idMap: Record<string, string> = {};
+    const newNodes = clipboard.map((n, i) => {
+      const newId = `node-${now + i}`;
+      idMap[n.id] = newId;
+      return {
+        ...n,
+        id: newId,
+        x: n.x + offset,
+        y: n.y + offset,
+      };
+    });
+    setNodes(nodes => [...nodes, ...newNodes]);
+    setSelectedNodeIds(newNodes.map(n => n.id));
+    // Optionally, copy wires between selected nodes
+    const newWires = wires.filter(w => clipboard.some(n => n.id === w.fromNodeId) && clipboard.some(n => n.id === w.toNodeId))
+      .map(w => ({
+        ...w,
+        id: `wire-${now}-${w.id}`,
+        fromNodeId: idMap[w.fromNodeId],
+        toNodeId: idMap[w.toNodeId],
+      }));
+    setWires(wires => [...wires, ...newWires]);
+  };
+
+  // Delete selected nodes
+  const handleDeleteNodes = () => {
+    if (selectedNodeIds.length === 0) return;
+    setNodes(nodes => nodes.filter(n => !selectedNodeIds.includes(n.id)));
+    setWires(wires => wires.filter(w => !selectedNodeIds.includes(w.fromNodeId) && !selectedNodeIds.includes(w.toNodeId)));
+    setSelectedNodeIds([]);
+  };
 
   // Clear canvas
   const handleClear = () => {
@@ -239,6 +280,9 @@ function App() {
           onWireDraftMove={handleWireDraftMove}
           onCompleteWire={handleCompleteWire}
           onCancelWire={handleCancelWire}
+          onCopyNodes={handleCopyNodes}
+          onPasteNodes={handlePasteNodes}
+          onDeleteNodes={handleDeleteNodes}
         />
         {/* Sliding Property Editor */}
         <div
@@ -270,7 +314,7 @@ function App() {
       {/* Context Menu */}
       {contextMenu && (
         <div style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, background: '#fff', border: '1px solid #ccc', zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }} onMouseLeave={handleCloseContextMenu}>
-          <div style={{ padding: 8, cursor: 'pointer', color: 'red' }} onClick={() => handleDeleteNodes(contextMenu.nodeIds)}>Delete</div>
+          <div style={{ padding: 8, cursor: 'pointer', color: 'red' }} onClick={handleDeleteNodes}>Delete</div>
         </div>
       )}
       {/* Property Modal */}

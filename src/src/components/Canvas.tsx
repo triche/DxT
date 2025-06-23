@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import type { NodeType } from '../App'
 
 type WireType = {
@@ -29,9 +29,12 @@ type CanvasProps = {
   onWireDraftMove: (end: { x: number; y: number }) => void
   onCompleteWire: (toNodeId: string, toPortIdx: number) => void
   onCancelWire: () => void
+  onCopyNodes: () => void;
+  onPasteNodes: () => void;
+  onDeleteNodes: () => void;
 }
 
-const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetSelectedNodeIds, onDeselect, onDropNode, onMoveNode, onNodeContextMenu, onStartWire, onWireDraftMove, onCompleteWire, onCancelWire }: CanvasProps) => {
+const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetSelectedNodeIds, onDeselect, onDropNode, onMoveNode, onNodeContextMenu, onStartWire, onWireDraftMove, onCompleteWire, onCancelWire, onCopyNodes, onPasteNodes, onDeleteNodes }: CanvasProps) => {
   const canvasRef = useRef<HTMLDivElement>(null)
 
   // Drop handler for new nodes
@@ -175,6 +178,25 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
       lassoJustCompleted.current = true
     }
   }
+
+  // Keyboard shortcuts for copy, paste, delete
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only trigger if canvas is focused or always (for now, always)
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        onCopyNodes();
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'v') {
+        e.preventDefault();
+        onPasteNodes();
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        onDeleteNodes();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onCopyNodes, onPasteNodes, onDeleteNodes]);
 
   return (
     <div
