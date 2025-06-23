@@ -20,6 +20,7 @@ type CanvasProps = {
   } | null
   selectedNodeIds: string[]
   onSelectNode: (id: string, multi?: boolean) => void
+  onSetSelectedNodeIds: (ids: string[]) => void // NEW
   onDeselect: () => void
   onDropNode: (type: string, x: number, y: number) => void
   onMoveNode: (id: string, x: number, y: number) => void
@@ -30,7 +31,7 @@ type CanvasProps = {
   onCancelWire: () => void
 }
 
-const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onDeselect, onDropNode, onMoveNode, onNodeContextMenu, onStartWire, onWireDraftMove, onCompleteWire, onCancelWire }: CanvasProps) => {
+const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetSelectedNodeIds, onDeselect, onDropNode, onMoveNode, onNodeContextMenu, onStartWire, onWireDraftMove, onCompleteWire, onCancelWire }: CanvasProps) => {
   const canvasRef = useRef<HTMLDivElement>(null)
 
   // Drop handler for new nodes
@@ -76,6 +77,8 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onDese
   // Store refs for all ports by node id and port index
   const outputPortRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
   const inputPortRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
+  // Store refs for all node divs
+  const nodeDivRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
 
   // Helper to get the DOM position of a port relative to the canvas, accounting for scroll and palette offset
   function getPortCenter(portEl: HTMLDivElement, canvasEl: HTMLDivElement) {
@@ -106,15 +109,90 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onDese
     if (wireDraft) onCancelWire()
   }
 
+  // Lasso selection state
+  const [lasso, setLasso] = React.useState<null | { start: { x: number; y: number }; end: { x: number; y: number } }>(null)
+  const lassoActive = React.useRef(false)
+  // Track the last set of lasso-selected node IDs
+  const lassoSelectedIds = React.useRef<string[]>([])
+
+  // Track if a lasso just completed to prevent accidental deselect
+  const lassoJustCompleted = React.useRef(false)
+
+  // Helper: get mouse position relative to canvas
+  function getCanvasPos(e: React.MouseEvent) {
+    if (!canvasRef.current) return { x: 0, y: 0 }
+    const rect = canvasRef.current.getBoundingClientRect()
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top }
+  }
+
+  // Start lasso on empty canvas (not on a node)
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    // Only start lasso if not clicking on a node
+    // Use e.currentTarget to reliably detect the canvas div
+    if (e.button === 0 && e.currentTarget === canvasRef.current) {
+      const pos = getCanvasPos(e)
+      setLasso({ start: pos, end: pos })
+      lassoActive.current = true
+    }
+  }
+
+  // Update lasso on mouse move
+  const handleCanvasLassoMove = (e: React.MouseEvent) => {
+    if (lassoActive.current && lasso && canvasRef.current) {
+      const newEnd = getCanvasPos(e)
+      setLasso(l => l ? { ...l, end: newEnd } : null)
+      // Compute lasso bounds
+      const lx1 = Math.min(lasso.start.x, newEnd.x)
+      const lx2 = Math.max(lasso.start.x, newEnd.x)
+      const ly1 = Math.min(lasso.start.y, newEnd.y)
+      const ly2 = Math.max(lasso.start.y, newEnd.y)
+      // Find nodes whose DOM bounding box (relative to canvas) intersects lasso
+      const selected = nodes.filter(node => {
+        const nodeDiv = nodeDivRefs.current[node.id]
+        if (!nodeDiv || !canvasRef.current) return false
+        const nodeRect = nodeDiv.getBoundingClientRect()
+        const canvasRect = canvasRef.current.getBoundingClientRect()
+        // Node position relative to canvas
+        const nx1 = nodeRect.left - canvasRect.left
+        const nx2 = nodeRect.right - canvasRect.left
+        const ny1 = nodeRect.top - canvasRect.top
+        const ny2 = nodeRect.bottom - canvasRect.top
+        return nx1 < lx2 && nx2 > lx1 && ny1 < ly2 && ny2 > ly1
+      }).map(n => n.id)
+      lassoSelectedIds.current = selected
+      onSetSelectedNodeIds(selected)
+    }
+    // Existing wire draft move
+    handleCanvasMouseMove(e)
+  }
+
+  // Complete lasso on mouse up
+  const handleCanvasLassoUp = () => {
+    if (lassoActive.current && lasso && canvasRef.current) {
+      lassoActive.current = false
+      onSetSelectedNodeIds(lassoSelectedIds.current)
+      setLasso(null)
+      lassoJustCompleted.current = true
+    }
+  }
+
   return (
     <div
       ref={canvasRef}
       style={{ flex: 1, minWidth: '70vw', maxWidth: '70vw', overflow: 'auto', position: 'relative', background: '#fff', border: '1px solid #ccc', margin: 8, userSelect: 'none', height: 'calc(100vh - 48px)' }}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
-      onClick={e => { if (e.target === e.currentTarget) onDeselect() }}
-      onMouseMove={handleCanvasMouseMove}
-      onMouseUp={handleCanvasMouseUp}
+      onClick={e => {
+        // Prevent accidental deselect if lasso just completed
+        if (lassoJustCompleted.current) {
+          lassoJustCompleted.current = false
+          return
+        }
+        if (e.target === e.currentTarget) onDeselect()
+      }}
+      onMouseDown={handleCanvasMouseDown}
+      onMouseMove={handleCanvasLassoMove}
+      onMouseUp={() => { handleCanvasLassoUp(); handleCanvasMouseUp(); }}
     >
       {/* Draw wires */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}>
@@ -169,11 +247,17 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onDese
         return (
           <div
             key={node.id}
+            ref={el => { nodeDivRefs.current[node.id] = el }}
             onClick={e => {
-              e.stopPropagation()
+              e.stopPropagation();
+              e.preventDefault(); // Prevent text selection on shift-click or normal click
               onSelectNode(node.id, e.shiftKey)
             }}
-            onMouseDown={e => handleMouseDown(e, node)}
+            onMouseDown={e => {
+              e.stopPropagation();
+              e.preventDefault(); // Prevent text selection on shift-click or normal click
+              handleMouseDown(e, node);
+            }}
             onContextMenu={e => onNodeContextMenu(e, node.id)}
             style={{
               position: 'absolute',
@@ -186,15 +270,15 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onDese
               cursor: draggingId === node.id ? 'grabbing' : 'pointer',
               minWidth: 80,
               textAlign: 'center',
-              userSelect: 'none',
+              userSelect: 'none', // Prevent text selection inside nodes
               minHeight: Math.max(inputs.length, outputs.length) * 28 + 24,
               boxShadow: selectedNodeIds.includes(node.id) ? '0 0 8px #4a90e2' : undefined,
               zIndex: selectedNodeIds.includes(node.id) ? 2 : 1,
               outline: selectedNodeIds.length > 1 && selectedNodeIds.includes(node.id) ? '2px dashed #4a90e2' : undefined,
             }}
           >
-            <div>{name || node.type}</div>
-            <div style={{ color: '#888', fontSize: 12, marginTop: 2, fontStyle: 'italic' }}>{node.type}</div>
+            <div style={{ userSelect: 'none' }}>{name || node.type}</div>
+            <div style={{ color: '#888', fontSize: 12, marginTop: 2, fontStyle: 'italic', userSelect: 'none' }}>{node.type}</div>
             {/* Output connectors as blue lollipops, interactive for wiring */}
             {outputs.length > 0 && outputs.map((port, i) => {
               const isConnected = wires.some(w => w.fromNodeId === node.id && w.fromPortIdx === i)
@@ -264,6 +348,22 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onDese
           </div>
         )
       })}
+      {/* Draw lasso rectangle */}
+      {lasso && (
+        <div
+          style={{
+            position: 'absolute',
+            left: Math.min(lasso.start.x, lasso.end.x),
+            top: Math.min(lasso.start.y, lasso.end.y),
+            width: Math.abs(lasso.end.x - lasso.start.x),
+            height: Math.abs(lasso.end.y - lasso.start.y),
+            background: 'rgba(100, 150, 255, 0.15)',
+            border: '1.5px dashed #4a90e2',
+            zIndex: 10,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
       <h3 style={{ position: 'absolute', top: 8, left: 8, color: '#bbb' }}>Diagram</h3>
     </div>
   )

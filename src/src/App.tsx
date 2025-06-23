@@ -80,6 +80,9 @@ function App() {
     }
   }
 
+  // Handler to set selected node IDs directly (for lasso selection)
+  const handleSetSelectedNodeIds = (ids: string[]) => setSelectedNodeIds(ids)
+
   // Handler for canvas click to clear selection
   const handleCanvasDeselect = () => setSelectedNodeIds([])
 
@@ -227,6 +230,7 @@ function App() {
           wireDraft={wireDraft}
           selectedNodeIds={selectedNodeIds}
           onSelectNode={handleSelectNode}
+          onSetSelectedNodeIds={handleSetSelectedNodeIds}
           onDeselect={handleCanvasDeselect}
           onDropNode={handleDropNode}
           onMoveNode={handleMoveNode}
@@ -248,13 +252,13 @@ function App() {
             borderLeft: '1px solid #ccc',
             boxShadow: '-2px 0 8px rgba(0,0,0,0.07)',
             zIndex: 30,
-            transform: selectedNodeIds.length ? 'translateX(0)' : 'translateX(100%)',
+            transform: selectedNodeIds.length === 1 ? 'translateX(0)' : 'translateX(100%)',
             transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)',
             display: 'flex',
             flexDirection: 'column',
           }}
         >
-          {selectedNodeIds.length > 0 && (
+          {selectedNodeIds.length === 1 && (
             <PropertyEditor
               nodes={nodes.filter(n => selectedNodeIds.includes(n.id))}
               onUpdateNode={handleUpdateNode}
