@@ -204,6 +204,21 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onCopyNodes, onPasteNodes, onDeleteNodes, onDeselect, onSetSelectedNodeIds, nodes]);
 
+  // Prevent text selection globally while wiring
+  useEffect(() => {
+    if (wireDraft) {
+      const onSelectStart = (e: Event) => e.preventDefault();
+      document.addEventListener('selectstart', onSelectStart, true);
+      document.body.style.userSelect = 'none';
+      return () => {
+        document.removeEventListener('selectstart', onSelectStart, true);
+        document.body.style.userSelect = '';
+      };
+    } else {
+      document.body.style.userSelect = '';
+    }
+  }, [wireDraft]);
+
   return (
     <div
       ref={canvasRef}
