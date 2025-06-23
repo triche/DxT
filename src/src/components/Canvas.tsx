@@ -192,11 +192,17 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
         onDeleteNodes();
+      } else if (e.key === 'Escape') {
+        onDeselect();
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        // Select all nodes on the canvas
+        onSetSelectedNodeIds(nodes.map(n => n.id));
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onCopyNodes, onPasteNodes, onDeleteNodes]);
+  }, [onCopyNodes, onPasteNodes, onDeleteNodes, onDeselect, onSetSelectedNodeIds, nodes]);
 
   return (
     <div
