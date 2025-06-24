@@ -183,6 +183,9 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Only trigger if canvas is focused or always (for now, always)
+      const target = e.target as HTMLElement;
+      const isTextInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+      if (isTextInput) return; // Don't handle global shortcuts in text fields
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'c') {
         e.preventDefault();
         onCopyNodes();
