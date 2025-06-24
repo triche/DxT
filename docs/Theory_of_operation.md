@@ -43,7 +43,7 @@ clicking on them. The user should be able to delete multiple components by
 right clicking on one of the selected components and selecting "delete".
 
 The application should have a top bar that allows the user to save their
-design, load a design, and clear the canvas. The save and load functionality
-should use the browser's local storage to persist the design. The design
-should be saved as a JSON object that contains the components, their
-properties, and the connections between them.
+design, load a design, and clear the canvas. The save and load
+functionality should use the browser's local storage to persist the design.
+The design should be saved as a JSON object that contains the components,
+their properties, and the connections between them.
