@@ -222,6 +222,16 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
     }
   }, [wireDraft]);
 
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const preventSelect = (e: Event) => e.preventDefault();
+    canvas.addEventListener('selectstart', preventSelect);
+    return () => {
+      canvas.removeEventListener('selectstart', preventSelect);
+    };
+  }, []);
+
   return (
     <div
       ref={canvasRef}
@@ -321,6 +331,8 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
               boxShadow: selectedNodeIds.includes(node.id) ? '0 0 8px #4a90e2' : undefined,
               zIndex: selectedNodeIds.includes(node.id) ? 2 : 1,
               outline: selectedNodeIds.length > 1 && selectedNodeIds.includes(node.id) ? '2px dashed #4a90e2' : undefined,
+              WebkitUserSelect: 'none', // Extra: prevent selection in Safari
+              MozUserSelect: 'none',    // Extra: prevent selection in Firefox
             }}
           >
             <div style={{ userSelect: 'none' }}>{name || node.type}</div>
