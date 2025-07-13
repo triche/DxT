@@ -286,7 +286,7 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
           )}
         </svg>
       </div>
-      {/* Render nodes and ports after wires so port circles are on top */}
+      {/* Render nodes after wires so port circles are on top */}
       {nodes.map(node => {
         // Get port names from node properties (default to 1 input/output for example node)
         function getPorts(props: Record<string, unknown>, key: 'inputs' | 'outputs'): string[] {
@@ -320,6 +320,8 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
               left: node.x,
               top: node.y,
               padding: 12,
+              paddingLeft: 28, // Increased to prevent input port clipping
+              paddingRight: 28, // Increased to prevent output port clipping
               background: selectedNodeIds.includes(node.id) ? '#e0eaff' : '#f5f5f5',
               border: selectedNodeIds.includes(node.id) ? '2px solid #4a90e2' : '1px solid #aaa',
               borderRadius: 6,
@@ -333,6 +335,7 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
               outline: selectedNodeIds.length > 1 && selectedNodeIds.includes(node.id) ? '2px dashed #4a90e2' : undefined,
               WebkitUserSelect: 'none', // Extra: prevent selection in Safari
               MozUserSelect: 'none',    // Extra: prevent selection in Firefox
+              overflow: 'visible', // Allow port SVGs to overflow and not be clipped
             }}
           >
             <div style={{ userSelect: 'none' }}>{name || node.type}</div>
