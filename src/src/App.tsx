@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Palette from './components/Palette'
 import Canvas from './components/Canvas'
 import PropertyEditor from './components/PropertyEditor'
+import { validateDiagram, formatValidationErrors } from './utils/validation'
 import './App.css'
 import './index.css'
 
@@ -166,13 +167,22 @@ function App() {
       reader.onload = (event) => {
         try {
           const data = JSON.parse(event.target?.result as string)
+          
+          // Validate the loaded data
+          const validationErrors = validateDiagram(data)
+          if (validationErrors.length > 0) {
+            const errorMessage = formatValidationErrors(validationErrors)
+            alert(`Invalid diagram file:\n${errorMessage}`)
+            return
+          }
+          
           setDiagramName(data.name || 'Untitled Diagram')
           setNodes(data.nodes || [])
           setCustomNodeDefs(data.customNodeDefs || [])
           setWires(data.wires || [])
           setSelectedNodeIds([])
-        } catch {
-          alert('Invalid JSON file.')
+        } catch (error) {
+          alert(`Failed to load diagram: ${error instanceof Error ? error.message : 'Invalid JSON file.'}`)
         }
       }
       reader.readAsText(file)

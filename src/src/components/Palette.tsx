@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { validatePalette, formatValidationErrors } from '../utils/validation'
 
 type PaletteProps = {
   customNodeDefs: { name: string; inputs: string[]; outputs: string[] }[]
@@ -110,6 +111,15 @@ const Palette: React.FC<PaletteProps> = ({ customNodeDefs, onAddCustomNodeDef })
   const importPaletteFromJson = (text: string) => {
     try {
       const loaded: { name: string; inputs: string[]; outputs: string[] }[] = JSON.parse(text);
+      
+      // Validate the loaded palette data
+      const validationErrors = validatePalette(loaded);
+      if (validationErrors.length > 0) {
+        const errorMessage = formatValidationErrors(validationErrors);
+        alert(`Invalid palette file:\n${errorMessage}`);
+        return;
+      }
+      
       loaded.forEach(def => {
         const baseName = def.name;
         let name = baseName;
@@ -121,8 +131,8 @@ const Palette: React.FC<PaletteProps> = ({ customNodeDefs, onAddCustomNodeDef })
         }
         onAddCustomNodeDef({ ...def, name });
       });
-    } catch {
-      alert('Invalid palette JSON file.');
+    } catch (error) {
+      alert(`Failed to load palette: ${error instanceof Error ? error.message : 'Invalid palette JSON file.'}`);
     }
   };
 
