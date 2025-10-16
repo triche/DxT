@@ -17,10 +17,12 @@ lerna-debug.log*
 
 # Build output
 dist/
+dist-ssr/
 build/
 
 # VSCode
 .vscode/
+!.vscode/extensions.json
 
 # System files
 Icon?
@@ -42,3 +44,6 @@ Icon?
 
 # Misc
 *.local
+
+# Vite
+.vite/
