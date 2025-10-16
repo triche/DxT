@@ -1,5 +1,5 @@
 {
-  "name": "src",
+  "name": "dxt",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -8,9 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "cd .. && node test/run-tests.js",
-    "test:validation": "cd .. && node test/validation-test.js",
-    "test:app": "cd .. && node test/app-functionality.test.js"
+    "test": "node test/run-tests.cjs",
+    "test:validation": "node test/validation-test.cjs",
+    "test:app": "node test/app-functionality.test.cjs"
   },
   "dependencies": {
     "react": "^19.1.0",

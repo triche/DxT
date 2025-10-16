@@ -22,3 +22,65 @@ In either case, the new graph of nodes must have the same number of inputs
 and outputs as the original node or group of nodes. This allows the new
 graph to be used in place of the original graph without changing the
 overall structure of the dataflow.
+
+## Project Structure
+
+```
+DxT/
+├── docs/                   # Documentation
+│   ├── ImplementationOptions.md
+│   └── Theory_of_operation.md
+├── src/                    # Source code
+│   ├── components/         # React components
+│   │   ├── Canvas/         # Canvas-related components
+│   │   ├── Canvas.tsx      # Main canvas component
+│   │   ├── Palette.tsx     # Component palette
+│   │   └── PropertyEditor.tsx
+│   ├── schemas/            # JSON schemas for validation
+│   ├── utils/              # Utility functions
+│   ├── App.tsx             # Main application component
+│   └── main.tsx            # Application entry point
+├── test/                   # Test suite
+│   ├── validation-test.cjs
+│   ├── app-functionality.test.cjs
+│   └── run-tests.cjs
+├── public/                 # Static assets
+├── index.html              # HTML entry point
+├── package.json            # Dependencies and scripts
+├── vite.config.ts          # Vite configuration
+└── tsconfig*.json          # TypeScript configuration
+```
+
+## Getting Started
+
+### Installation
+
+```bash
+npm install
+```
+
+### Development
+
+```bash
+npm run dev
+```
+
+### Build
+
+```bash
+npm run build
+```
+
+### Testing
+
+```bash
+npm test
+```
+
+### Linting
+
+```bash
+npm run lint
+```
+
+For more details on testing, see [test/README.md](test/README.md).

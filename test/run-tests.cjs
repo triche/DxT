@@ -34,8 +34,8 @@ async function runTest(testFile, testName) {
 
 async function runAllTests() {
     const tests = [
-        { file: 'validation-test.js', name: 'Validation System Tests' },
-        { file: 'app-functionality.test.js', name: 'Application Functionality Tests' }
+        { file: 'validation-test.cjs', name: 'Validation System Tests' },
+        { file: 'app-functionality.test.cjs', name: 'Application Functionality Tests' }
     ];
     
     let allPassed = true;

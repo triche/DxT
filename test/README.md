@@ -77,7 +77,6 @@ This comprehensive test suite validates all major functionality of the DxT dataf
 
 ### Run All Tests
 ```bash
-cd src
 npm test
 ```
 
@@ -93,9 +92,9 @@ npm run test:app
 ### Direct Execution
 ```bash
 # From project root
-node test/validation-test.js
-node test/app-functionality.test.js
-node test/run-tests.js
+node test/validation-test.cjs
+node test/app-functionality.test.cjs
+node test/run-tests.cjs
 ```
 
 ## Test Results
