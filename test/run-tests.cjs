@@ -52,6 +52,15 @@ async function runAllTests() {
         console.log('⚠️  Some test suites failed. Please review the output above.');
     }
     console.log('='.repeat(60));
+    
+    return allPassed;
 }
 
-runAllTests().catch(console.error);
+runAllTests()
+    .then((allPassed) => {
+        process.exit(allPassed ? 0 : 1);
+    })
+    .catch((error) => {
+        console.error(error);
+        process.exit(1);
+    });
