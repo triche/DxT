@@ -53,11 +53,14 @@ async function runAllTests() {
     }
     console.log('='.repeat(60));
     
-    // Exit with non-zero code if any tests failed
-    process.exit(allPassed ? 0 : 1);
+    return allPassed;
 }
 
-runAllTests().catch((error) => {
-    console.error(error);
-    process.exit(1);
-});
+runAllTests()
+    .then((allPassed) => {
+        process.exit(allPassed ? 0 : 1);
+    })
+    .catch((error) => {
+        console.error(error);
+        process.exit(1);
+    });
