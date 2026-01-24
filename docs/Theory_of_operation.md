@@ -74,16 +74,16 @@ wiring and for lasso selection based on node DOM bounds.
 
 ### 2.4 Rendering and Layout
 
-The layout uses a fixed top bar and a horizontal split:
+The layout uses a fixed top bar and a three-column horizontal split with precise viewport sizing:
 
-- **Top bar**: Save, Load, Save Transformation, Clear, and diagram name input.
-- **Left pane**: Palette (approximately 30% width, scrollable).
-- **Right pane**: Canvas (approximately 70% width, scrollable) with a
-  sliding property editor on the far right, plus a fixed Transformation
-  Library panel.
+- **Top bar**: Save, Load, Save Transformation, Clear, and diagram name input (fixed, 48px height).
+- **Left pane**: Palette (20vw width, scrollable vertically).
+- **Center pane**: Canvas (60vw width, scrollable horizontally and vertically).
+- **Right pane**: Transformation Library and Property Editor (20vw width, relative positioned).
 
-Wire rendering is done via SVG polylines, positioned behind nodes and ports
-for clear visual hierarchy.
+The canvas implements dynamic content bounds calculation that accounts for nodes positioned anywhere in 2D space, including negative coordinates. This allows nodes to be placed outside the initial viewport, with automatic scrollbars enabling access to all content.
+
+Wire rendering is done via SVG polylines, positioned behind nodes and ports for clear visual hierarchy. The SVG layer expands to cover the full scrollable canvas area.
 
 ## 3) Feature Behavior and UX
 
@@ -116,7 +116,25 @@ multi-selected.
   multiple inputs.
 - If wiring is canceled (mouse up on empty canvas), the draft is discarded.
 
-### 3.4 Property Editing
+### 3.4 Canvas Scrolling and Coordinate System
+
+The canvas implements intelligent scrolling to handle nodes placed anywhere in 2D space:
+
+- **Dynamic Bounds Calculation**: The canvas automatically calculates content bounds based on all node positions, including nodes with negative coordinates.
+- **Offset System**: The canvas maintains offset values (`offsetX`, `offsetY`) that translate between viewport coordinates and node coordinates, allowing nodes to be positioned at any location including negative values.
+- **Automatic Scrollbars**: Horizontal and vertical scrollbars appear automatically when nodes extend beyond the visible viewport in any direction.
+- **Content Wrapper**: A positioned wrapper div expands dynamically to encompass all nodes plus padding (`CANVAS_PADDING = 100px`), ensuring the scrollable area always covers all content.
+- **Scroll Preservation**: Node positioning, drag operations, and wire rendering all account for the canvas offset, maintaining correct behavior regardless of scroll position.
+
+Key implementation constants:
+- `ESTIMATED_NODE_WIDTH`: 150px (used for bounds calculation)
+- `PORT_HEIGHT`: 28px (vertical spacing per port)
+- `BASE_NODE_HEIGHT`: 60px (minimum node height)
+- `CANVAS_PADDING`: 100px (extra space around content bounds)
+
+This design ensures that nodes placed during transformation application or manual positioning remain accessible, even if they fall outside the initial viewport.
+
+### 3.5 Property Editing
 
 - When exactly one node is selected, the property editor slides in from
   the right. It displays:
@@ -128,7 +146,7 @@ multi-selected.
 - Changes apply immediately across selected nodes (batch edit) when
   multiple nodes share the same property value.
 
-### 3.5 Clipboard Operations
+### 3.6 Clipboard Operations
 
 - **Copy** (Ctrl/Cmd+C): Stores selected nodes in a local clipboard.
 - **Paste** (Ctrl/Cmd+V): Creates new nodes with new IDs and an offset, so
@@ -137,7 +155,7 @@ multi-selected.
 - **Delete** (Delete/Backspace): Removes selected nodes and any wires
   attached to them.
 
-### 3.6 Context Menu
+### 3.7 Context Menu
 
 - Right-click on a node to open a context menu. If multiple nodes are
   selected, the menu applies to the selection.
@@ -146,7 +164,7 @@ multi-selected.
 - Right-click on a transformation card in the Transformation Library to
   open a context menu with Delete.
 
-### 3.7 Palette Management
+### 3.8 Palette Management
 
 - Built-in node types: **Source** (outputs only) and **Sink** (inputs
   only).
@@ -158,7 +176,7 @@ multi-selected.
 - Uses the File System Access API when available; otherwise falls back to
   file input and download links.
 
-### 3.8 Diagram Persistence
+### 3.9 Diagram Persistence
 
 - **Save Diagram**: Exports `name`, `nodes`, `customNodeDefs`, and `wires`
   as JSON. The filename is sanitized to remove unsafe characters.
@@ -166,7 +184,7 @@ multi-selected.
   updates application state. Invalid files are rejected with a formatted
   error list.
 
-### 3.9 Transformation Management
+### 3.10 Transformation Management
 
 - **Transformation Library**: A right-side panel listing loaded
   transformations. Cards show name, input ports, and output ports.
