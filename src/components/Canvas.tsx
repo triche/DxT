@@ -232,6 +232,44 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
     };
   }, []);
 
+  // Calculate the canvas content bounds based on node positions
+  const canvasContentBounds = React.useMemo(() => {
+    if (nodes.length === 0) {
+      return { width: 0, height: 0 };
+    }
+    
+    // Calculate bounds with some padding
+    const padding = 100;
+    let maxX = 0;
+    let maxY = 0;
+    
+    nodes.forEach(node => {
+      // Estimate node dimensions (we use a reasonable estimate since actual dimensions depend on rendering)
+      const estimatedNodeWidth = 150;
+      const estimatedNodeHeight = Math.max(
+        getPorts(node.properties, 'inputs').length,
+        getPorts(node.properties, 'outputs').length
+      ) * 28 + 60;
+      
+      maxX = Math.max(maxX, node.x + estimatedNodeWidth);
+      maxY = Math.max(maxY, node.y + estimatedNodeHeight);
+    });
+    
+    return {
+      width: maxX + padding,
+      height: maxY + padding
+    };
+  }, [nodes]);
+
+  // Helper function to get ports (duplicate of inline function for use in useMemo)
+  function getPorts(props: Record<string, unknown>, key: 'inputs' | 'outputs'): string[] {
+    const val = props[key];
+    if (Array.isArray(val) && val.every(p => typeof p === 'string')) {
+      return val as string[];
+    }
+    return [];
+  }
+
   return (
     <div
       ref={canvasRef}
@@ -250,6 +288,12 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
       onMouseMove={handleCanvasLassoMove}
       onMouseUp={() => { handleCanvasLassoUp(); handleCanvasMouseUp(); }}
     >
+      {/* Content wrapper that expands based on node positions to enable scrolling */}
+      <div style={{
+        position: 'relative',
+        minWidth: Math.max(canvasContentBounds.width, canvasRef.current?.clientWidth || 0),
+        minHeight: Math.max(canvasContentBounds.height, canvasRef.current?.clientHeight || 0),
+      }}>
       {/* Draw wires */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}>
         <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
@@ -426,6 +470,7 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
         />
       )}
       <h3 style={{ position: 'absolute', top: 8, left: 8, color: '#bbb' }}>Diagram</h3>
+      </div>
     </div>
   )
 }
