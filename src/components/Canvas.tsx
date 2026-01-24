@@ -232,36 +232,7 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
     };
   }, []);
 
-  // Calculate the canvas content bounds based on node positions
-  const canvasContentBounds = React.useMemo(() => {
-    if (nodes.length === 0) {
-      return { width: 0, height: 0 };
-    }
-    
-    // Calculate bounds with some padding
-    const padding = 100;
-    let maxX = 0;
-    let maxY = 0;
-    
-    nodes.forEach(node => {
-      // Estimate node dimensions (we use a reasonable estimate since actual dimensions depend on rendering)
-      const estimatedNodeWidth = 150;
-      const estimatedNodeHeight = Math.max(
-        getPorts(node.properties, 'inputs').length,
-        getPorts(node.properties, 'outputs').length
-      ) * 28 + 60;
-      
-      maxX = Math.max(maxX, node.x + estimatedNodeWidth);
-      maxY = Math.max(maxY, node.y + estimatedNodeHeight);
-    });
-    
-    return {
-      width: maxX + padding,
-      height: maxY + padding
-    };
-  }, [nodes]);
-
-  // Helper function to get ports (duplicate of inline function for use in useMemo)
+  // Helper function to get ports from node properties
   function getPorts(props: Record<string, unknown>, key: 'inputs' | 'outputs'): string[] {
     const val = props[key];
     if (Array.isArray(val) && val.every(p => typeof p === 'string')) {
@@ -269,6 +240,38 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
     }
     return [];
   }
+
+  // Constants for canvas size calculation
+  const ESTIMATED_NODE_WIDTH = 150;
+  const PORT_HEIGHT = 28;
+  const BASE_NODE_HEIGHT = 60;
+  const CANVAS_PADDING = 100;
+
+  // Calculate the canvas content bounds based on node positions
+  const canvasContentBounds = React.useMemo(() => {
+    if (nodes.length === 0) {
+      return { width: 0, height: 0 };
+    }
+    
+    let maxX = 0;
+    let maxY = 0;
+    
+    nodes.forEach(node => {
+      // Estimate node dimensions (we use a reasonable estimate since actual dimensions depend on rendering)
+      const estimatedNodeHeight = Math.max(
+        getPorts(node.properties, 'inputs').length,
+        getPorts(node.properties, 'outputs').length
+      ) * PORT_HEIGHT + BASE_NODE_HEIGHT;
+      
+      maxX = Math.max(maxX, node.x + ESTIMATED_NODE_WIDTH);
+      maxY = Math.max(maxY, node.y + estimatedNodeHeight);
+    });
+    
+    return {
+      width: maxX + CANVAS_PADDING,
+      height: maxY + CANVAS_PADDING
+    };
+  }, [nodes]);
 
   return (
     <div
@@ -332,15 +335,6 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
       </div>
       {/* Render nodes after wires so port circles are on top */}
       {nodes.map(node => {
-        // Get port names from node properties (default to 1 input/output for example node)
-        function getPorts(props: Record<string, unknown>, key: 'inputs' | 'outputs'): string[] {
-          const val = props[key];
-          if (Array.isArray(val) && val.every(p => typeof p === 'string')) {
-            return val as string[];
-          }
-          // Only default if the property is missing (not present at all)
-          return [];
-        }
         const inputs = getPorts(node.properties, 'inputs')
         const outputs = getPorts(node.properties, 'outputs')
         const name = node.properties?.name as string
