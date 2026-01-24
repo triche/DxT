@@ -34,6 +34,15 @@ type CanvasProps = {
   onDeleteNodes: () => void;
 }
 
+// Helper function to get ports from node properties
+function getPorts(props: Record<string, unknown>, key: 'inputs' | 'outputs'): string[] {
+  const val = props[key];
+  if (Array.isArray(val) && val.every(p => typeof p === 'string')) {
+    return val as string[];
+  }
+  return [];
+}
+
 const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetSelectedNodeIds, onDeselect, onDropNode, onMoveNode, onNodeContextMenu, onStartWire, onWireDraftMove, onCompleteWire, onCancelWire, onCopyNodes, onPasteNodes, onDeleteNodes }: CanvasProps) => {
   const canvasRef = useRef<HTMLDivElement>(null)
 
@@ -231,15 +240,6 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
       canvas.removeEventListener('selectstart', preventSelect);
     };
   }, []);
-
-  // Helper function to get ports from node properties
-  function getPorts(props: Record<string, unknown>, key: 'inputs' | 'outputs'): string[] {
-    const val = props[key];
-    if (Array.isArray(val) && val.every(p => typeof p === 'string')) {
-      return val as string[];
-    }
-    return [];
-  }
 
   // Constants for canvas size calculation
   const ESTIMATED_NODE_WIDTH = 150;
