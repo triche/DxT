@@ -2,7 +2,8 @@ import { useState } from 'react'
 import Palette from './components/Palette'
 import Canvas from './components/Canvas'
 import PropertyEditor from './components/PropertyEditor'
-import { validateDiagram, formatValidationErrors } from './utils/validation'
+import { validateDiagram, validateTransformation, formatValidationErrors } from './utils/validation'
+import { applyTransformationToSelection, buildTransformationFromDiagram, getApplicableTransformations, getPortList } from './utils/transformation'
 import './App.css'
 import './index.css'
 
@@ -31,13 +32,31 @@ export type WireType = {
   toPortIdx: number
 }
 
+export type TransformationType = {
+  name: string
+  inputPattern: string[]
+  outputPattern: string[]
+  replacementNodes: NodeType[]
+}
+
+const builtInNodeDefs: NodeTypeDef[] = [
+  { name: 'Source', inputs: [], outputs: ['out'] },
+  { name: 'Sink', inputs: ['in'], outputs: [] },
+]
+
+const areStringArraysEqual = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i])
+
 function App() {
   const [nodes, setNodes] = useState<NodeType[]>([])
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([])
 
   const [customNodeDefs, setCustomNodeDefs] = useState<NodeTypeDef[]>([])
+  const [transformations, setTransformations] = useState<TransformationType[]>([])
   const [showPropertyModal, setShowPropertyModal] = useState(false)
+  const [showSaveTransformationModal, setShowSaveTransformationModal] = useState(false)
+  const [pendingTransformation, setPendingTransformation] = useState<TransformationType | null>(null)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeIds: string[] } | null>(null)
+  const [transformationContextMenu, setTransformationContextMenu] = useState<{ x: number; y: number; index: number } | null>(null)
   const [wires, setWires] = useState<WireType[]>([])
   const [wireDraft, setWireDraft] = useState<{
     fromNodeId: string
@@ -57,13 +76,8 @@ function App() {
 
   // Handler for dropping a node from the palette
   const handleDropNode = (type: string, x: number, y: number) => {
-    // Built-in node definitions
-    const builtInDefs = [
-      { name: 'Source', inputs: [], outputs: ['out'] },
-      { name: 'Sink', inputs: ['in'], outputs: [] },
-    ];
     // Look up node definition in built-in and custom node defs
-    const def = [...builtInDefs, ...customNodeDefs].find(d => d.name === type)
+    const def = [...builtInNodeDefs, ...customNodeDefs].find(d => d.name === type)
     setNodes([...nodes, {
       id: `node-${Date.now()}`,
       type,
@@ -134,6 +148,71 @@ function App() {
   // Cancel draft wire if not completed
   const handleCancelWire = () => setWireDraft(null)
 
+  const ensurePaletteDefs = (replacementNodes: NodeType[]) => {
+    const toNodeDef = (node: NodeType): NodeTypeDef | null => {
+      const inputs = getPortList(node.properties, 'inputs')
+      const outputs = getPortList(node.properties, 'outputs')
+      if (!node.type) return null
+      return { name: node.type, inputs, outputs }
+    }
+
+    setCustomNodeDefs(prev => {
+      const existing = [...builtInNodeDefs, ...prev]
+      const toAdd: NodeTypeDef[] = []
+      replacementNodes.forEach(node => {
+        const def = toNodeDef(node)
+        if (!def) return
+        const exists = existing.some(d => d.name === def.name && areStringArraysEqual(d.inputs, def.inputs) && areStringArraysEqual(d.outputs, def.outputs))
+        const alreadyQueued = toAdd.some(d => d.name === def.name && areStringArraysEqual(d.inputs, def.inputs) && areStringArraysEqual(d.outputs, def.outputs))
+        if (!exists && !alreadyQueued) {
+          toAdd.push(def)
+        }
+      })
+      return toAdd.length > 0 ? [...prev, ...toAdd] : prev
+    })
+  }
+
+  const handleAddTransformation = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json,application/json'
+    input.onchange = (e: Event) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target?.result as string)
+          const validationErrors = validateTransformation(data)
+          if (validationErrors.length > 0) {
+            const errorMessage = formatValidationErrors(validationErrors)
+            alert(`Invalid transformation file:\n${errorMessage}`)
+            return
+          }
+          setTransformations(prev => [...prev, data as TransformationType])
+        } catch (error) {
+          alert(`Failed to load transformation: ${error instanceof Error ? error.message : 'Invalid JSON file.'}`)
+        }
+      }
+      reader.readAsText(file)
+    }
+    input.click()
+  }
+
+  const handleApplyTransformation = (transformation: TransformationType, nodeIds: string[]) => {
+    const result = applyTransformationToSelection(nodes, wires, nodeIds, transformation)
+    if (!result) {
+      alert('Selected nodes do not match the transformation requirements.')
+      return
+    }
+
+    ensurePaletteDefs(result.replacementNodes)
+    setNodes(result.nodes)
+    setWires(result.wires)
+    setSelectedNodeIds(result.selectedNodeIds)
+    setContextMenu(null)
+  }
+
   // Save to local filesystem as JSON file
   const handleSave = () => {
     const saveData = {
@@ -190,13 +269,59 @@ function App() {
     input.click()
   }
 
+  const saveTransformationToFile = (transformation: TransformationType) => {
+    const json = JSON.stringify(transformation, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${transformation.name.replace(/[^a-zA-Z0-9-_]+/g, '_') || 'transformation'}.json`
+    document.body.appendChild(a)
+    a.click()
+    setTimeout(() => {
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }, 0)
+  }
+
+  const handleSaveTransformation = () => {
+    const transformation = buildTransformationFromDiagram(nodes, wires, diagramName)
+    setPendingTransformation(transformation)
+    setShowSaveTransformationModal(true)
+  }
+
+  const handleSaveTransformationDecision = (addToLibrary: boolean) => {
+    if (!pendingTransformation) {
+      setShowSaveTransformationModal(false)
+      return
+    }
+    saveTransformationToFile(pendingTransformation)
+    if (addToLibrary) {
+      setTransformations(prev => [...prev, pendingTransformation])
+    }
+    setPendingTransformation(null)
+    setShowSaveTransformationModal(false)
+  }
+
   // Context menu handlers
   const handleNodeContextMenu = (e: React.MouseEvent, nodeId: string) => {
     e.preventDefault()
     const nodeIds = selectedNodeIds.includes(nodeId) ? selectedNodeIds : [nodeId]
+    setSelectedNodeIds(nodeIds)
     setContextMenu({ x: e.clientX, y: e.clientY, nodeIds })
   }
   const handleCloseContextMenu = () => setContextMenu(null)
+  const handleCloseTransformationContextMenu = () => setTransformationContextMenu(null)
+
+  const handleTransformationContextMenu = (e: React.MouseEvent, index: number) => {
+    e.preventDefault()
+    setTransformationContextMenu({ x: e.clientX, y: e.clientY, index })
+  }
+
+  const handleDeleteTransformation = (index: number) => {
+    setTransformations(prev => prev.filter((_, i) => i !== index))
+    setTransformationContextMenu(null)
+  }
 
   // Property modal handlers
   const handleClosePropertyModal = () => setShowPropertyModal(false)
@@ -256,6 +381,10 @@ function App() {
     setSelectedNodeIds([])
   }
 
+  const applicableTransformations = contextMenu
+    ? getApplicableTransformations(nodes, wires, contextMenu.nodeIds, transformations)
+    : []
+
   return (
     <div style={{ display: 'flex', height: '100vh', minWidth: 1000, maxWidth: '100vw', overflowX: 'auto' }}>
       <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: 48, background: '#f5f5f5', borderBottom: '1px solid #ccc', zIndex: 20, display: 'flex', alignItems: 'center', paddingLeft: 16 }}>
@@ -268,6 +397,7 @@ function App() {
         />
         <button onClick={handleSave} style={{ marginRight: 8 }}>Save</button>
         <button onClick={handleLoad} style={{ marginRight: 8 }}>Load</button>
+        <button onClick={handleSaveTransformation} style={{ marginRight: 8 }}>Save Transformation</button>
         <button onClick={handleClear}>Clear Diagram</button>
       </div>
       <Palette
@@ -294,37 +424,105 @@ function App() {
           onPasteNodes={handlePasteNodes}
           onDeleteNodes={handleDeleteNodes}
         />
-        {/* Sliding Property Editor */}
-        <div
-          style={{
-            position: 'fixed',
-            top: 48, // only top bar
-            right: 0,
-            height: 'calc(100vh - 48px)',
-            width: 320,
-            background: '#f9f9f9',
-            borderLeft: '1px solid #ccc',
-            boxShadow: '-2px 0 8px rgba(0,0,0,0.07)',
-            zIndex: 30,
-            transform: selectedNodeIds.length === 1 ? 'translateX(0)' : 'translateX(100%)',
-            transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {selectedNodeIds.length === 1 && (
-            <PropertyEditor
-              nodes={nodes.filter(n => selectedNodeIds.includes(n.id))}
-              onUpdateNode={handleUpdateNode}
-              immediate
-            />
+      </div>
+      {/* Right Sidebar */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 48,
+          right: 0,
+          height: 'calc(100vh - 48px)',
+          width: 320,
+          background: '#f0f0f0',
+          borderLeft: '1px solid #ccc',
+          boxShadow: '-2px 0 8px rgba(0,0,0,0.07)',
+          zIndex: 25,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <div style={{ padding: 12, borderBottom: '1px solid #ddd', background: '#f5f5f5' }}>
+          <h3 style={{ margin: 0, marginBottom: 8 }}>Transformation Library</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 220, overflowY: 'auto' }}>
+            {transformations.length === 0 && (
+              <div style={{ color: '#777', fontSize: 12 }}>No transformations loaded.</div>
+            )}
+            {transformations.map((t, idx) => (
+              <div
+                key={`${t.name}-${idx}`}
+                onContextMenu={e => handleTransformationContextMenu(e, idx)}
+                style={{ background: '#fff', border: '1px solid #ccc', borderRadius: 6, padding: 8, cursor: 'context-menu' }}
+              >
+                <div style={{ fontWeight: 600 }}>{t.name}</div>
+                <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+                  In: {t.inputPattern.join(', ') || 'none'}
+                </div>
+                <div style={{ fontSize: 12, color: '#666' }}>
+                  Out: {t.outputPattern.join(', ') || 'none'}
+                </div>
+              </div>
+            ))}
+          </div>
+          <button onClick={handleAddTransformation} style={{ marginTop: 10, width: '100%' }}>Add Transformation</button>
+        </div>
+        <div style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
+          {selectedNodeIds.length !== 1 && (
+            <div style={{ padding: 12, color: '#777' }}>Select a single node to edit properties.</div>
           )}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              left: 0,
+              bottom: 0,
+              background: '#f9f9f9',
+              transform: selectedNodeIds.length === 1 ? 'translateX(0)' : 'translateX(100%)',
+              transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)',
+              overflowY: 'auto',
+            }}
+          >
+            {selectedNodeIds.length === 1 && (
+              <PropertyEditor
+                nodes={nodes.filter(n => selectedNodeIds.includes(n.id))}
+                onUpdateNode={handleUpdateNode}
+                immediate
+              />
+            )}
+          </div>
         </div>
       </div>
       {/* Context Menu */}
       {contextMenu && (
         <div style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, background: '#fff', border: '1px solid #ccc', zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }} onMouseLeave={handleCloseContextMenu}>
-          <div style={{ padding: 8, cursor: 'pointer', color: 'red' }} onClick={handleDeleteNodes}>Delete</div>
+          <div style={{ padding: 8, cursor: 'pointer', color: 'red' }} onClick={() => { handleDeleteNodes(); handleCloseContextMenu(); }}>Delete</div>
+          <div style={{ padding: 8, borderTop: '1px solid #eee', fontWeight: 600 }}>Apply Transformation</div>
+          {applicableTransformations.length === 0 ? (
+            <div style={{ padding: 8, color: '#888' }}>No applicable transformations</div>
+          ) : (
+            applicableTransformations.map((t, idx) => (
+              <div
+                key={`${t.name}-${idx}`}
+                style={{ padding: 8, cursor: 'pointer' }}
+                onClick={() => handleApplyTransformation(t, contextMenu.nodeIds)}
+              >
+                {t.name}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+      {transformationContextMenu && (
+        <div
+          style={{ position: 'fixed', top: transformationContextMenu.y, left: transformationContextMenu.x, background: '#fff', border: '1px solid #ccc', zIndex: 110, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
+          onMouseLeave={handleCloseTransformationContextMenu}
+        >
+          <div
+            style={{ padding: 8, cursor: 'pointer', color: 'red' }}
+            onClick={() => handleDeleteTransformation(transformationContextMenu.index)}
+          >
+            Delete
+          </div>
         </div>
       )}
       {/* Property Modal */}
@@ -334,6 +532,21 @@ function App() {
           onClose={handleClosePropertyModal}
           onSave={handleUpdateNodeProperties}
         />
+      )}
+      {/* Save Transformation Modal */}
+      {showSaveTransformationModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div style={{ background: '#fff', padding: 24, borderRadius: 8, minWidth: 360, boxShadow: '0 2px 16px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ marginTop: 0 }}>Add Transformation to Library?</h3>
+            <p style={{ marginBottom: 20, color: '#444' }}>
+              Save this transformation and add it to the Transformation Library?
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button type="button" onClick={() => handleSaveTransformationDecision(true)}>Yes, add</button>
+              <button type="button" onClick={() => handleSaveTransformationDecision(false)}>No, just save</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

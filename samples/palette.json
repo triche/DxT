@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Filter",
+    "inputs": ["in"],
+    "outputs": ["out"]
+  },
+  {
+    "name": "Normalize",
+    "inputs": ["in"],
+    "outputs": ["out"]
+  },
+  {
+    "name": "Scale",
+    "inputs": ["in"],
+    "outputs": ["out"]
+  },
+  {
+    "name": "OptimizedFilter",
+    "inputs": ["in"],
+    "outputs": ["out"]
+  }
+]

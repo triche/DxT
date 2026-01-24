@@ -1,5 +1,6 @@
-import { diagramSchema } from '../schemas/diagramSchema';
-import { paletteSchema } from '../schemas/paletteSchema';
+import { diagramSchema } from '../schemas/diagramSchema.ts';
+import { paletteSchema } from '../schemas/paletteSchema.ts';
+import { transformationSchema } from '../schemas/transformationSchema.ts';
 
 // Type for validation errors
 export type ValidationError = {
@@ -238,6 +239,10 @@ export function validateDiagram(data: unknown): ValidationError[] {
 
 export function validatePalette(data: unknown): ValidationError[] {
   return validator.validate(data, paletteSchema);
+}
+
+export function validateTransformation(data: unknown): ValidationError[] {
+  return validator.validate(data, transformationSchema);
 }
 
 // Helper to format validation errors for user display

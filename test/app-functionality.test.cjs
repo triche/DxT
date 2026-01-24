@@ -462,6 +462,21 @@ test('Reject invalid diagram data', () => {
     assertTrue(!hasRequiredNodeFields || !hasCustomNodeDefs || !hasWires);
 });
 
+// === TRANSFORMATION LIBRARY TESTS ===
+console.log('\n🧩 Transformation Library Tests:');
+
+test('Delete transformation removes correct entry', () => {
+    const transformations = [
+        { name: 'T1' },
+        { name: 'T2' },
+        { name: 'T3' }
+    ];
+    const indexToDelete = 1;
+    const updated = transformations.filter((_, i) => i !== indexToDelete);
+    assertEqual(updated.length, 2);
+    assertTrue(updated.every(t => t.name !== 'T2'), 'Deleted transformation should be removed');
+});
+
 // === TEST SUMMARY ===
 console.log('\n' + '='.repeat(50));
 console.log(`📊 Test Results Summary:`);

@@ -3,22 +3,23 @@
 # DxT (Design by Transformation) Project Instructions
 
 This is a React + TypeScript web application for designing dataflow
-diagrams. The current implementation focuses on a visual editor (palette,
-canvas, wiring, selection, property editing, and JSON persistence). Runtime
-execution and transformation application are conceptual extensions, not
-implemented.
+diagrams. The implementation includes a visual editor (palette, canvas,
+wiring, selection, property editing, and JSON persistence) plus a
+transformation library with load/apply/save capabilities.
 
 ## Core Architecture
 
 **Layout:** 30/70 split layout with palette on left, canvas on right, and a
 sliding property editor from the right. Fixed top bar for diagram name,
-save/load/clear.
+save/load/save transformation/clear. Right sidebar hosts the
+Transformation Library.
 
 **Key Components:**
 - `App.tsx` - Main application with state management and event handlers
 - `Canvas.tsx` - Main canvas area with node rendering, wiring, and interactions
 - `Palette.tsx` - Draggable component palette with custom node creation
 - `PropertyEditor.tsx` - Sliding panel for editing node properties
+- `utils/transformation.ts` - Transformation matching and application helpers
 - Modular Canvas components (present but currently not the primary render
   path): `Node.tsx`, `Port.tsx`, `WireLayer.tsx`, `Lasso.tsx`
 
@@ -30,7 +31,7 @@ save/load/clear.
 - **Node Selection:** Single click to select, Shift+click for multi-select
 - **Lasso Selection:** Click and drag on empty canvas to create selection rectangle
 - **Visual Feedback:** Selected nodes have blue border, glow effect, and dashed outline for multi-select
-- **Context Menu:** Right-click for delete option
+- **Context Menu:** Right-click for delete and apply transformation
 - **Node Types:** Built-in Source/Sink nodes + unlimited custom node types
 - **Properties:** Name, Python file path, description, metadata, input/output
   port definitions
@@ -70,6 +71,8 @@ save/load/clear.
 
 ### File Operations
 - **Save/Load:** JSON format for complete diagram persistence
+- **Save Transformation:** Export current diagram to transformation JSON
+	based on unwired ports
 - **Data Structure:** Includes nodes, custom node definitions, wires, and diagram metadata
 - **Local File System:** Browser-based file operations with fallback support
 - **File System Access API:** Modern browsers get native file picker
@@ -105,8 +108,8 @@ The application models two transformation types conceptually:
 2. **Optimization:** Replace a node or group with a more efficient
    implementation.
 
-These concepts inform the editor design but are not executed in the current
-codebase.
+These concepts inform the editor design and are supported via a
+Transformation Library and transformation application.
 
 ## Key Implementation Notes
 
