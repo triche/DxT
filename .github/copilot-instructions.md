@@ -33,7 +33,7 @@ save/load/clear.
 - **Context Menu:** Right-click for delete option
 - **Node Types:** Built-in Source/Sink nodes + unlimited custom node types
 - **Properties:** Name, Python file path, description, metadata, input/output
-	port definitions
+  port definitions
 
 ### Wiring System
 - **Interactive Wiring:** Drag from output ports (blue circles) to input ports (green circles)
