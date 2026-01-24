@@ -65,7 +65,7 @@ save/load/clear.
 - **Node Creation Modal:** Form to define node name and port specifications
 - **Palette Persistence:** Save/load palette configurations as JSON
 - **Name Conflict Resolution:** Auto-increment names when loading duplicate
-	types
+  types
 - **Visual Design:** Consistent styling with drag handles and port information
 
 ### File Operations
