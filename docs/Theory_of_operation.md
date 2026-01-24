@@ -20,14 +20,17 @@ Key capabilities include:
 - Palette management (create, save, load custom node types).
 - Diagram persistence to JSON with schema validation on load.
 - Property editing with immediate updates and batch editing support.
+- Transformation library management (load, save, delete transformations).
+- Transformation application based on external port patterns.
 
 ## 2) Application Architecture
 
 ### 2.1 Core Components and Responsibilities
 
 - **App**: Central state owner and coordinator. Holds diagram state,
-  handles file I/O, selection, clipboard, and wire rules. Renders
-  `Palette`, `Canvas`, and the sliding `PropertyEditor`.
+  handles file I/O, selection, clipboard, transformation logic, and wire
+  rules. Renders `Palette`, `Canvas`, the sliding `PropertyEditor`, and the
+  Transformation Library.
 - **Palette**: Left panel with built-in and custom node types. Supports
   creating new node definitions and saving/loading palette JSON. Implements
   drag source behavior for node creation.
@@ -50,6 +53,8 @@ The diagram is represented by three primary collections and a diagram name:
 - **Custom node definitions**: Each definition has `name`, `inputs`,
   `outputs`.
 - **Diagram name**: Used for display and filename generation.
+- **Transformations**: Each transformation defines `name`, `inputPattern`,
+  `outputPattern`, and `replacementNodes`.
 
 Schemas are enforced through JSON validation utilities, ensuring that
 imported diagrams and palettes conform to expected structures.
@@ -61,6 +66,8 @@ State is managed via React `useState` and coordinated in `App`:
 - `nodes`, `wires`, `customNodeDefs`
 - `selectedNodeIds`, `wireDraft`, `clipboard`
 - `diagramName`, `contextMenu`
+- `transformations`, `transformationContextMenu`,
+  `showSaveTransformationModal`, `pendingTransformation`
 
 `Canvas` uses `useRef` for DOM measurements to compute port centers for
 wiring and for lasso selection based on node DOM bounds.
@@ -69,10 +76,11 @@ wiring and for lasso selection based on node DOM bounds.
 
 The layout uses a fixed top bar and a horizontal split:
 
-- **Top bar**: Save, Load, Clear, and diagram name input.
+- **Top bar**: Save, Load, Save Transformation, Clear, and diagram name input.
 - **Left pane**: Palette (approximately 30% width, scrollable).
 - **Right pane**: Canvas (approximately 70% width, scrollable) with a
-  sliding property editor on the far right.
+  sliding property editor on the far right, plus a fixed Transformation
+  Library panel.
 
 Wire rendering is done via SVG polylines, positioned behind nodes and ports
 for clear visual hierarchy.
@@ -133,7 +141,10 @@ multi-selected.
 
 - Right-click on a node to open a context menu. If multiple nodes are
   selected, the menu applies to the selection.
-- The only action in the current menu is Delete.
+- Actions: Delete and Apply Transformation (with applicable transformations).
+
+- Right-click on a transformation card in the Transformation Library to
+  open a context menu with Delete.
 
 ### 3.7 Palette Management
 
@@ -154,6 +165,24 @@ multi-selected.
 - **Load Diagram**: Reads JSON, validates against the diagram schema, and
   updates application state. Invalid files are rejected with a formatted
   error list.
+
+### 3.9 Transformation Management
+
+- **Transformation Library**: A right-side panel listing loaded
+  transformations. Cards show name, input ports, and output ports.
+- **Add Transformation**: Loads a transformation JSON file and validates it
+  against the transformation schema.
+- **Save Transformation**: Exports the current diagram as a transformation.
+  Unwired input ports become `inputPattern`; unwired output ports become
+  `outputPattern`. The transformation name comes from the diagram name
+  field. A modal asks whether to also add it to the library.
+- **Apply Transformation**: From the node context menu, only transformations
+  whose external port multiset matches the selection are shown. External
+  ports include unconnected ports or ports wired to nodes outside the
+  selection. Internal wires are ignored.
+- **Wiring on Apply**: Replacement nodes are offset to the selection’s top
+  left. External wires are reconnected by matching port names; unmatched
+  replacement ports remain unconnected.
 
 ## 4) Implementation Choices and Rationale
 
@@ -209,6 +238,5 @@ locally on Docker Desktop.
 
 The conceptual model supports transformations such as refinement and
 optimization, where a node or subgraph can be replaced by an equivalent
-subgraph with identical interface ports. This document describes the
-current editor; transformation execution and runtime semantics are planned
-extensions.
+subgraph with identical interface ports. Runtime semantics and execution
+are planned extensions.

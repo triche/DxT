@@ -1,0 +1,93 @@
+{
+  "name": "Sample Transformation Diagram",
+  "nodes": [
+    {
+      "id": "node-1",
+      "type": "Source",
+      "x": 120,
+      "y": 120,
+      "properties": {
+        "name": "Source",
+        "inputs": [],
+        "outputs": ["out"],
+        "description": "Sample data source"
+      }
+    },
+    {
+      "id": "node-2",
+      "type": "Filter",
+      "x": 320,
+      "y": 120,
+      "properties": {
+        "name": "Filter",
+        "inputs": ["in"],
+        "outputs": ["out"],
+        "description": "Filters outliers"
+      }
+    },
+    {
+      "id": "node-3",
+      "type": "Normalize",
+      "x": 520,
+      "y": 120,
+      "properties": {
+        "name": "Normalize",
+        "inputs": ["in"],
+        "outputs": ["out"],
+        "description": "Normalizes values"
+      }
+    },
+    {
+      "id": "node-4",
+      "type": "Sink",
+      "x": 720,
+      "y": 120,
+      "properties": {
+        "name": "Sink",
+        "inputs": ["in"],
+        "outputs": [],
+        "description": "Sample data sink"
+      }
+    }
+  ],
+  "customNodeDefs": [
+    {
+      "name": "Filter",
+      "inputs": ["in"],
+      "outputs": ["out"]
+    },
+    {
+      "name": "Normalize",
+      "inputs": ["in"],
+      "outputs": ["out"]
+    },
+    {
+      "name": "Scale",
+      "inputs": ["in"],
+      "outputs": ["out"]
+    }
+  ],
+  "wires": [
+    {
+      "id": "wire-1",
+      "fromNodeId": "node-1",
+      "fromPortIdx": 0,
+      "toNodeId": "node-2",
+      "toPortIdx": 0
+    },
+    {
+      "id": "wire-2",
+      "fromNodeId": "node-2",
+      "fromPortIdx": 0,
+      "toNodeId": "node-3",
+      "toPortIdx": 0
+    },
+    {
+      "id": "wire-3",
+      "fromNodeId": "node-3",
+      "fromPortIdx": 0,
+      "toNodeId": "node-4",
+      "toPortIdx": 0
+    }
+  ]
+}

@@ -9,7 +9,19 @@ const path = require('path');
 async function runTest(testFile, testName) {
     return new Promise((resolve) => {
         console.log(`📋 Running ${testName}...`);
-        const child = spawn('node', [testFile], { cwd: path.dirname(__filename) });
+        const env = { ...process.env };
+        const args = testFile.endsWith('.mjs')
+            ? ['--loader', 'ts-node/esm', testFile]
+            : [testFile];
+        if (testFile.endsWith('.mjs')) {
+            env.TS_NODE_PROJECT = path.resolve(__dirname, '../tsconfig.app.json');
+            env.TS_NODE_COMPILER_OPTIONS = JSON.stringify({
+                module: 'ESNext',
+                moduleResolution: 'bundler',
+                allowImportingTsExtensions: true
+            });
+        }
+        const child = spawn('node', args, { cwd: path.dirname(__filename), env });
         
         let output = '';
         child.stdout.on('data', (data) => {
@@ -34,8 +46,10 @@ async function runTest(testFile, testName) {
 
 async function runAllTests() {
     const tests = [
-        { file: 'validation-test.cjs', name: 'Validation System Tests' },
-        { file: 'app-functionality.test.cjs', name: 'Application Functionality Tests' }
+        { file: 'validation-test.mjs', name: 'Validation System Tests' },
+        { file: 'app-functionality.test.cjs', name: 'Application Functionality Tests' },
+        { file: 'transformation-applicability.test.mjs', name: 'Transformation Applicability Tests' },
+        { file: 'transformation-apply.test.mjs', name: 'Transformation Apply Tests' }
     ];
     
     let allPassed = true;

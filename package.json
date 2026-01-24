@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "node test/run-tests.cjs",
-    "test:validation": "node test/validation-test.cjs",
+    "test:validation": "TS_NODE_PROJECT=tsconfig.app.json TS_NODE_COMPILER_OPTIONS=\"{\\\"module\\\":\\\"ESNext\\\",\\\"moduleResolution\\\":\\\"bundler\\\",\\\"allowImportingTsExtensions\\\":true}\" node --loader ts-node/esm test/validation-test.mjs",
     "test:app": "node test/app-functionality.test.cjs"
   },
   "dependencies": {

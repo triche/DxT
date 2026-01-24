@@ -5,6 +5,9 @@ graphs. Users drag node types from a palette onto a canvas, wire outputs to
 inputs, and edit node properties in a sliding panel. Diagrams and palettes
 can be saved/loaded as JSON with schema validation.
 
+Transformations can be loaded, saved, and applied to selections based on
+external port patterns.
+
 ## Core Functionality (Concise)
 
 - Drag-and-drop node creation from a palette.
@@ -13,6 +16,7 @@ can be saved/loaded as JSON with schema validation.
 - Clipboard: copy, paste (with wire preservation), delete.
 - Property editing with immediate updates.
 - Diagram save/load (JSON) and palette save/load.
+- Transformation library (load, save, delete) and apply from context menu.
 
 ## Installation
 
@@ -71,6 +75,11 @@ npm test
 6. **Save/Load**: Use the top bar to save or load diagrams as JSON.
 7. **Palette management**: Create custom node types, then save/load palette
    JSON from the palette panel.
+8. **Save transformation**: Use Save Transformation to export the current
+   diagram into a transformation JSON (based on unwired ports). Choose to
+   add it to the Transformation Library.
+9. **Apply transformation**: Right-click a node selection and choose
+   Apply Transformation from the context menu.
 
 ### Keyboard Shortcuts
 
@@ -85,6 +94,8 @@ npm test
 - **Diagram JSON**: Includes diagram name, nodes, custom node definitions,
   and wires. Validated on load.
 - **Palette JSON**: Custom node definitions only (built-ins excluded).
+- **Transformation JSON**: Includes transformation name, input/output
+   patterns, and replacement nodes.
 
 ## Project Structure
 
@@ -104,9 +115,15 @@ DxT/
 │   ├── App.tsx             # Main application component
 │   └── main.tsx            # Application entry point
 ├── test/                   # Test suite
-│   ├── validation-test.cjs
+│   ├── validation-test.mjs
 │   ├── app-functionality.test.cjs
+│   ├── transformation-applicability.test.mjs
+│   ├── transformation-apply.test.mjs
 │   └── run-tests.cjs
+├── samples/                # Sample JSON files
+│   ├── diagram.json
+│   ├── palette.json
+│   └── transformation.json
 ├── public/                 # Static assets
 ├── index.html              # HTML entry point
 ├── Dockerfile              # Container build (multi-stage)

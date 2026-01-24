@@ -1,0 +1,20 @@
+{
+  "name": "Filter + Normalize -> OptimizedFilter",
+  "inputPattern": ["in"],
+  "outputPattern": ["out"],
+  "replacementNodes": [
+    {
+      "id": "opt-1",
+      "type": "OptimizedFilter",
+      "x": 320,
+      "y": 120,
+      "properties": {
+        "name": "OptimizedFilter",
+        "inputs": ["in"],
+        "outputs": ["out"],
+        "description": "Optimized combined filter + normalize",
+        "pythonFile": "pipelines/optimized_filter.py"
+      }
+    }
+  ]
+}

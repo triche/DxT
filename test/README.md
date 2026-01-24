@@ -5,7 +5,7 @@ This comprehensive test suite validates all major functionality of the DxT dataf
 
 ## Test Files
 
-### 1. `validation-test.js`
+### 1. `validation-test.mjs`
 **Purpose:** Tests the JSON schema validation system
 **Coverage:**
 - Valid diagram validation
@@ -65,7 +65,23 @@ This comprehensive test suite validates all major functionality of the DxT dataf
   - Valid data loading
   - Invalid data rejection
 
-### 3. `run-tests.js`
+### 3. `transformation-applicability.test.mjs`
+**Purpose:** Tests transformation applicability logic
+**Coverage:**
+- Applicable transformation detection
+- Internal wire exclusion
+- Unconnected ports treated as external
+- Duplicate port name matching
+
+### 4. `transformation-apply.test.mjs`
+**Purpose:** Tests transformation application and export logic
+**Coverage:**
+- Unwired port export rules
+- Rewiring external connections
+- Duplicate port handling
+- Extra replacement ports remain unconnected
+
+### 5. `run-tests.cjs`
 **Purpose:** Test runner script that executes all test suites
 **Features:**
 - Sequential test execution
@@ -92,8 +108,10 @@ npm run test:app
 ### Direct Execution
 ```bash
 # From project root
-node test/validation-test.cjs
+node --loader ts-node/esm test/validation-test.mjs
 node test/app-functionality.test.cjs
+node --loader ts-node/esm test/transformation-applicability.test.mjs
+node --loader ts-node/esm test/transformation-apply.test.mjs
 node test/run-tests.cjs
 ```
 
