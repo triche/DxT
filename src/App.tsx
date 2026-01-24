@@ -429,7 +429,7 @@ function App() {
     : []
 
   return (
-    <div style={{ display: 'flex', height: '100vh', minWidth: 1000, maxWidth: '100vw', overflowX: 'auto' }}>
+    <div style={{ display: 'flex', height: '100vh', width: '100vw', maxWidth: '100vw', overflowX: 'hidden', boxSizing: 'border-box' }}>
       <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: 48, background: '#f5f5f5', borderBottom: '1px solid #ccc', zIndex: 20, display: 'flex', alignItems: 'center', paddingLeft: 16 }}>
         <input
           type="text"
@@ -447,7 +447,7 @@ function App() {
         customNodeDefs={customNodeDefs}
         onAddCustomNodeDef={handleAddCustomNodeDef}
       />
-      <div style={{ flex: 1, display: 'flex', position: 'relative', height: '100vh' }}>
+      <div style={{ flex: '0 0 60vw', width: '60vw', minWidth: 0, display: 'flex', position: 'relative', height: 'calc(100vh - 48px)', marginTop: 48, boxSizing: 'border-box' }}>
         <Canvas
           nodes={nodes}
           wires={wires}
@@ -471,17 +471,19 @@ function App() {
       {/* Right Sidebar */}
       <div
         style={{
-          position: 'fixed',
-          top: 48,
-          right: 0,
+          position: 'relative',
+          marginTop: 48,
           height: 'calc(100vh - 48px)',
-          width: 320,
+          width: '20vw',
+          minWidth: 0,
+          maxWidth: '20vw',
           background: '#f0f0f0',
           borderLeft: '1px solid #ccc',
           boxShadow: '-2px 0 8px rgba(0,0,0,0.07)',
           zIndex: 25,
           display: 'flex',
           flexDirection: 'column',
+          boxSizing: 'border-box',
         }}
       >
         <div style={{ padding: 12, borderBottom: '1px solid #ddd', background: '#f5f5f5' }}>
