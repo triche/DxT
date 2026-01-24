@@ -1,0 +1,42 @@
+{
+  "name": "ChainProcessor",
+  "inputPattern": ["in"],
+  "outputPattern": ["out"],
+  "replacementNodes": [
+    {
+      "id": "filter-1",
+      "type": "Filter",
+      "x": 200,
+      "y": 100,
+      "properties": {
+        "name": "Filter",
+        "inputs": ["in"],
+        "outputs": ["out"],
+        "description": "Filters data",
+        "pythonFile": "pipelines/filter.py"
+      }
+    },
+    {
+      "id": "normalize-1",
+      "type": "Normalize",
+      "x": 350,
+      "y": 100,
+      "properties": {
+        "name": "Normalize",
+        "inputs": ["in"],
+        "outputs": ["out"],
+        "description": "Normalizes data",
+        "pythonFile": "pipelines/normalize.py"
+      }
+    }
+  ],
+  "internalWires": [
+    {
+      "id": "internal-wire-1",
+      "fromNodeId": "filter-1",
+      "fromPortIdx": 0,
+      "toNodeId": "normalize-1",
+      "toPortIdx": 0
+    }
+  ]
+}

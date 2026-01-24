@@ -1,0 +1,54 @@
+{
+  "name": "Filter+Normalize Chain",
+  "inputPattern": [
+    "in"
+  ],
+  "outputPattern": [
+    "out"
+  ],
+  "replacementNodes": [
+    {
+      "id": "filter-node",
+      "type": "Filter",
+      "x": 250,
+      "y": 100,
+      "properties": {
+        "name": "Filter",
+        "inputs": [
+          "in"
+        ],
+        "outputs": [
+          "out"
+        ],
+        "description": "Filters data",
+        "pythonFile": "pipelines/filter.py"
+      }
+    },
+    {
+      "id": "normalize-node",
+      "type": "Normalize",
+      "x": 450,
+      "y": 100,
+      "properties": {
+        "name": "Normalize",
+        "inputs": [
+          "in"
+        ],
+        "outputs": [
+          "out"
+        ],
+        "description": "Normalizes data",
+        "pythonFile": "pipelines/normalize.py"
+      }
+    }
+  ],
+  "internalWires": [
+    {
+      "id": "wire-2-internal",
+      "fromNodeId": "filter-node",
+      "fromPortIdx": 0,
+      "toNodeId": "normalize-node",
+      "toPortIdx": 0
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "name": "Internal Wiring Test Diagram",
+  "nodes": [
+    {
+      "id": "source-1",
+      "type": "Source",
+      "x": 50,
+      "y": 150,
+      "properties": {
+        "name": "DataSource",
+        "inputs": [],
+        "outputs": ["out"],
+        "description": "Input data source"
+      }
+    },
+    {
+      "id": "filter-node",
+      "type": "Filter",
+      "x": 250,
+      "y": 100,
+      "properties": {
+        "name": "Filter",
+        "inputs": ["in"],
+        "outputs": ["out"],
+        "description": "Filters data",
+        "pythonFile": "pipelines/filter.py"
+      }
+    },
+    {
+      "id": "normalize-node",
+      "type": "Normalize",
+      "x": 450,
+      "y": 100,
+      "properties": {
+        "name": "Normalize",
+        "inputs": ["in"],
+        "outputs": ["out"],
+        "description": "Normalizes data",
+        "pythonFile": "pipelines/normalize.py"
+      }
+    },
+    {
+      "id": "sink-1",
+      "type": "Sink",
+      "x": 650,
+      "y": 150,
+      "properties": {
+        "name": "DataSink",
+        "inputs": ["in"],
+        "outputs": [],
+        "description": "Output data sink"
+      }
+    }
+  ],
+  "customNodeDefs": [
+    {
+      "name": "Filter",
+      "inputs": ["in"],
+      "outputs": ["out"]
+    },
+    {
+      "name": "Normalize",
+      "inputs": ["in"],
+      "outputs": ["out"]
+    }
+  ],
+  "wires": [
+    {
+      "id": "wire-1",
+      "fromNodeId": "source-1",
+      "fromPortIdx": 0,
+      "toNodeId": "filter-node",
+      "toPortIdx": 0
+    },
+    {
+      "id": "wire-2-internal",
+      "fromNodeId": "filter-node",
+      "fromPortIdx": 0,
+      "toNodeId": "normalize-node",
+      "toPortIdx": 0
+    },
+    {
+      "id": "wire-3",
+      "fromNodeId": "normalize-node",
+      "fromPortIdx": 0,
+      "toNodeId": "sink-1",
+      "toPortIdx": 0
+    }
+  ]
+}
