@@ -20,7 +20,7 @@ save/load/clear.
 - `Palette.tsx` - Draggable component palette with custom node creation
 - `PropertyEditor.tsx` - Sliding panel for editing node properties
 - Modular Canvas components (present but currently not the primary render
-	path): `Node.tsx`, `Port.tsx`, `WireLayer.tsx`, `Lasso.tsx`
+  path): `Node.tsx`, `Port.tsx`, `WireLayer.tsx`, `Lasso.tsx`
 
 ## Feature Set (Current Implementation)
 
@@ -65,7 +65,7 @@ save/load/clear.
 - **Node Creation Modal:** Form to define node name and port specifications
 - **Palette Persistence:** Save/load palette configurations as JSON
 - **Name Conflict Resolution:** Auto-increment names when loading duplicate
-	types
+  types
 - **Visual Design:** Consistent styling with drag handles and port information
 
 ### File Operations
@@ -73,7 +73,7 @@ save/load/clear.
 - **Data Structure:** Includes nodes, custom node definitions, wires, and diagram metadata
 - **Local File System:** Browser-based file operations with fallback support
 - **File System Access API:** Modern browsers get native file picker
-	integration
+  integration
 - **Error Handling:** Graceful fallback for unsupported browsers or invalid files
 
 ### Visual Design System
@@ -101,9 +101,9 @@ save/load/clear.
 The application models two transformation types conceptually:
 
 1. **Refinement:** Replace a node with a more detailed/platform-specific
-	version.
+   version.
 2. **Optimization:** Replace a node or group with a more efficient
-	implementation.
+   implementation.
 
 These concepts inform the editor design but are not executed in the current
 codebase.
