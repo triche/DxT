@@ -94,6 +94,42 @@ export const transformationSchema = {
         },
         additionalProperties: false
       }
+    },
+    internalWires: {
+      type: "array",
+      description: "Wires connecting nodes within the transformation",
+      items: {
+        type: "object",
+        required: ["id", "fromNodeId", "fromPortIdx", "toNodeId", "toPortIdx"],
+        properties: {
+          id: {
+            type: "string",
+            description: "Unique identifier for the wire",
+            minLength: 1
+          },
+          fromNodeId: {
+            type: "string",
+            description: "Source node ID",
+            minLength: 1
+          },
+          fromPortIdx: {
+            type: "number",
+            description: "Source port index",
+            minimum: 0
+          },
+          toNodeId: {
+            type: "string",
+            description: "Target node ID",
+            minLength: 1
+          },
+          toPortIdx: {
+            type: "number",
+            description: "Target port index",
+            minimum: 0
+          }
+        },
+        additionalProperties: false
+      }
     }
   },
   additionalProperties: false

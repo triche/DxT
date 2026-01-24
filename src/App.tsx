@@ -37,6 +37,7 @@ export type TransformationType = {
   inputPattern: string[]
   outputPattern: string[]
   replacementNodes: NodeType[]
+  internalWires?: WireType[]
 }
 
 const builtInNodeDefs: NodeTypeDef[] = [
@@ -55,6 +56,8 @@ function App() {
   const [showPropertyModal, setShowPropertyModal] = useState(false)
   const [showSaveTransformationModal, setShowSaveTransformationModal] = useState(false)
   const [pendingTransformation, setPendingTransformation] = useState<TransformationType | null>(null)
+  const [showTransformationErrorModal, setShowTransformationErrorModal] = useState(false)
+  const [transformationErrorMessage, setTransformationErrorMessage] = useState<string>('')
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeIds: string[] } | null>(null)
   const [transformationContextMenu, setTransformationContextMenu] = useState<{ x: number; y: number; index: number } | null>(null)
   const [wires, setWires] = useState<WireType[]>([])
@@ -172,31 +175,71 @@ function App() {
     })
   }
 
-  const handleAddTransformation = () => {
+  const importTransformationFromJson = (text: string) => {
+    try {
+      const data = JSON.parse(text)
+      const validationErrors = validateTransformation(data)
+      if (validationErrors.length > 0) {
+        const errorMessage = formatValidationErrors(validationErrors)
+        setTransformationErrorMessage(`Invalid transformation file:\n${errorMessage}`)
+        setShowTransformationErrorModal(true)
+        return
+      }
+      setTransformations(prev => [...prev, data as TransformationType])
+    } catch (error) {
+      setTransformationErrorMessage(`Failed to load transformation: ${error instanceof Error ? error.message : 'Invalid JSON file.'}`)
+      setShowTransformationErrorModal(true)
+    }
+  }
+
+  const openTransformationFileInput = () => {
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = '.json,application/json'
+    input.value = ''
     input.onchange = (e: Event) => {
       const file = (e.target as HTMLInputElement).files?.[0]
+      document.body.removeChild(input)
       if (!file) return
       const reader = new FileReader()
       reader.onload = (event) => {
-        try {
-          const data = JSON.parse(event.target?.result as string)
-          const validationErrors = validateTransformation(data)
-          if (validationErrors.length > 0) {
-            const errorMessage = formatValidationErrors(validationErrors)
-            alert(`Invalid transformation file:\n${errorMessage}`)
-            return
-          }
-          setTransformations(prev => [...prev, data as TransformationType])
-        } catch (error) {
-          alert(`Failed to load transformation: ${error instanceof Error ? error.message : 'Invalid JSON file.'}`)
-        }
+        importTransformationFromJson(event.target?.result as string)
+      }
+      reader.onerror = () => {
+        setTransformationErrorMessage('Failed to read transformation file.')
+        setShowTransformationErrorModal(true)
       }
       reader.readAsText(file)
     }
+    document.body.appendChild(input)
     input.click()
+  }
+
+  const handleAddTransformation = () => {
+    if ('showOpenFilePicker' in window) {
+      (async () => {
+        try {
+          const [fileHandle] = await (window as unknown as { showOpenFilePicker: (options: { types?: Array<{ description: string; accept: Record<string, string[]> }>; multiple?: boolean; }) => Promise<unknown[]> }).showOpenFilePicker({
+            types: [{ description: 'JSON Files', accept: { 'application/json': ['.json'] } }],
+            multiple: false,
+          })
+          // @ts-expect-error: File System Access API types are not standard
+          const file = await fileHandle.getFile()
+          const text = await file.text()
+          importTransformationFromJson(text)
+        } catch (error) {
+          if (error && typeof error === 'object' && 'name' in error && (error as { name?: string }).name === 'AbortError') {
+            return
+          }
+          setTransformationErrorMessage(`Failed to open transformation file: ${error instanceof Error ? error.message : 'Unknown error.'}`)
+          setShowTransformationErrorModal(true)
+          openTransformationFileInput()
+        }
+      })()
+      return
+    }
+
+    openTransformationFileInput()
   }
 
   const handleApplyTransformation = (transformation: TransformationType, nodeIds: string[]) => {
@@ -544,6 +587,17 @@ function App() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
               <button type="button" onClick={() => handleSaveTransformationDecision(true)}>Yes, add</button>
               <button type="button" onClick={() => handleSaveTransformationDecision(false)}>No, just save</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showTransformationErrorModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 210 }}>
+          <div style={{ background: '#fff', padding: 24, borderRadius: 8, minWidth: 360, maxWidth: 520, boxShadow: '0 2px 16px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ marginTop: 0 }}>Transformation Load Failed</h3>
+            <pre style={{ whiteSpace: 'pre-wrap', color: '#444', marginBottom: 20 }}>{transformationErrorMessage}</pre>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button type="button" onClick={() => setShowTransformationErrorModal(false)}>Close</button>
             </div>
           </div>
         </div>
