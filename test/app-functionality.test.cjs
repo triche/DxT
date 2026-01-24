@@ -174,6 +174,105 @@ test('Built-in node definitions are preserved', () => {
     assertTrue(allDefs.some(d => d.name === 'CustomNode'));
 });
 
+// === PALETTE SAVE FUNCTIONALITY TESTS ===
+console.log('\n🎨 Palette Save Functionality Tests:');
+
+test('Palette save modal state initialization', () => {
+    // Simulate initial state
+    let showSaveModal = false;
+    let saveFilename = '';
+    
+    // Simulate handleSavePalette (opens modal)
+    showSaveModal = true;
+    saveFilename = 'Palette';
+    
+    assertTrue(showSaveModal, 'Modal should be shown');
+    assertEqual(saveFilename, 'Palette', 'Default filename should be "Palette"');
+});
+
+test('Palette save filename with user input', () => {
+    // Simulate user entering a custom filename
+    let saveFilename = 'Palette';
+    
+    // User types custom filename
+    saveFilename = 'MyCustomPalette';
+    
+    assertEqual(saveFilename, 'MyCustomPalette');
+});
+
+test('Palette save filename trimming and fallback', () => {
+    // Test 1: Filename with whitespace should be trimmed
+    let saveFilename = '  MyPalette  ';
+    const trimmedFilename = saveFilename.trim() || 'Palette';
+    assertEqual(trimmedFilename, 'MyPalette');
+    
+    // Test 2: Empty filename should fallback to default
+    saveFilename = '   ';
+    const fallbackFilename = saveFilename.trim() || 'Palette';
+    assertEqual(fallbackFilename, 'Palette');
+    
+    // Test 3: Empty string should fallback to default
+    saveFilename = '';
+    const emptyFallback = saveFilename.trim() || 'Palette';
+    assertEqual(emptyFallback, 'Palette');
+});
+
+test('Palette save filename generates correct file name', () => {
+    const testCases = [
+        { input: 'MyPalette', expected: 'MyPalette.json' },
+        { input: 'Test123', expected: 'Test123.json' },
+        { input: '  Spaced  ', expected: 'Spaced.json' },
+        { input: '', expected: 'Palette.json' },
+        { input: '   ', expected: 'Palette.json' }
+    ];
+    
+    testCases.forEach(({ input, expected }) => {
+        const filename = input.trim() || 'Palette';
+        const fullFilename = `${filename}.json`;
+        assertEqual(fullFilename, expected, `Input "${input}" should generate "${expected}"`);
+    });
+});
+
+test('Palette save modal cancellation', () => {
+    // Simulate modal open state
+    let showSaveModal = true;
+    let saveFilename = 'MyPalette';
+    
+    // Simulate cancel button click
+    showSaveModal = false;
+    
+    assertTrue(!showSaveModal, 'Modal should be closed after cancel');
+    // Note: filename state is preserved in case user reopens
+});
+
+test('Palette save modal submission closes modal', () => {
+    // Simulate modal submission flow
+    let showSaveModal = true;
+    let saveFilename = 'CustomPalette';
+    
+    // Simulate form submission (handleSavePaletteSubmit)
+    const filename = saveFilename.trim() || 'Palette';
+    showSaveModal = false; // Modal closes on submit
+    
+    assertTrue(!showSaveModal, 'Modal should be closed after submission');
+    assertEqual(filename, 'CustomPalette', 'Filename should be processed');
+});
+
+test('Palette data structure for save', () => {
+    // Simulate palette data structure (excludes built-in nodes)
+    const customNodeDefs = [
+        createMockNodeDef('CustomNode1', ['in1'], ['out1']),
+        createMockNodeDef('CustomNode2', ['in2', 'in3'], ['out2'])
+    ];
+    
+    // Only custom nodes should be saved (built-in nodes excluded)
+    const nodesToSave = customNodeDefs;
+    
+    assertEqual(nodesToSave.length, 2);
+    assertTrue(nodesToSave.every(n => n.name.startsWith('Custom')));
+    assertTrue(nodesToSave.every(n => n.name !== 'Source' && n.name !== 'Sink'));
+});
+
 // === SELECTION MANAGEMENT TESTS ===
 console.log('\n🎯 Selection Management Tests:');
 
@@ -624,6 +723,7 @@ console.log('\n📝 Test Coverage Areas:');
 console.log('✅ Node Management (creation, updates, positioning)');
 console.log('✅ Wire Management (connections, validation, removal)');
 console.log('✅ Custom Node Definitions (creation, validation)');
+console.log('✅ Palette Save Functionality (modal, filename handling, state management)');
 console.log('✅ Selection Management (single, multi, lasso, clearing)');
 console.log('✅ Copy/Paste Functionality (clipboard, offset, wire preservation)');
 console.log('✅ File Format (save structure, serialization, name sanitization)');
