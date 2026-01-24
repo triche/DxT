@@ -75,6 +75,23 @@ const Palette: React.FC<PaletteProps> = ({ customNodeDefs, onAddCustomNodeDef })
     }
   };
 
+  const openPaletteFileInput = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.value = '';
+    input.onchange = async (e) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files && target.files[0];
+      document.body.removeChild(input);
+      if (!file) return;
+      const text = await file.text();
+      importPaletteFromJson(text);
+    };
+    document.body.appendChild(input);
+    input.click();
+  };
+
   // Load Palette handler
   const handleLoadPalette = async () => {
     // Use File System Access API if available
@@ -88,23 +105,16 @@ const Palette: React.FC<PaletteProps> = ({ customNodeDefs, onAddCustomNodeDef })
         const file = await fileHandle.getFile();
         const text = await file.text();
         importPaletteFromJson(text);
-      } catch {
-        // User cancelled or not supported
+      } catch (error) {
+        if (error && typeof error === 'object' && 'name' in error && (error as { name?: string }).name === 'AbortError') {
+          return;
+        }
+        openPaletteFileInput();
       }
-    } else {
-      // Fallback: use input element
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json,application/json';
-      input.onchange = async (e) => {
-        const target = e.target as HTMLInputElement;
-        const file = target.files && target.files[0];
-        if (!file) return;
-        const text = await file.text();
-        importPaletteFromJson(text);
-      };
-      input.click();
+      return;
     }
+    // Fallback: use input element
+    openPaletteFileInput();
   };
 
   // Helper to import palette JSON and ensure unique node names
@@ -137,7 +147,7 @@ const Palette: React.FC<PaletteProps> = ({ customNodeDefs, onAddCustomNodeDef })
   };
 
   return (
-    <div style={{ width: '30vw', minWidth: 200, maxWidth: 400, background: '#f4f4f4', borderRight: '1px solid #ccc', padding: 16, boxSizing: 'border-box', height: '100vh', overflowY: 'auto', marginTop: 48 }}>
+    <div style={{ width: '20vw', minWidth: 0, maxWidth: '20vw', background: '#f4f4f4', borderRight: '1px solid #ccc', padding: '12px 8px', boxSizing: 'border-box', height: '100vh', overflowY: 'auto', marginTop: 48 }}>
       <h3>Palette</h3>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 16 }}>
         <button onClick={handleNewNode}>New Node</button>

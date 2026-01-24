@@ -34,6 +34,21 @@ type CanvasProps = {
   onDeleteNodes: () => void;
 }
 
+// Helper function to get ports from node properties
+function getPorts(props: Record<string, unknown>, key: 'inputs' | 'outputs'): string[] {
+  const val = props[key];
+  if (Array.isArray(val) && val.every(p => typeof p === 'string')) {
+    return val as string[];
+  }
+  return [];
+}
+
+// Constants for canvas size calculation
+const ESTIMATED_NODE_WIDTH = 150;
+const PORT_HEIGHT = 28;
+const BASE_NODE_HEIGHT = 60;
+const CANVAS_PADDING = 100;
+
 const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetSelectedNodeIds, onDeselect, onDropNode, onMoveNode, onNodeContextMenu, onStartWire, onWireDraftMove, onCompleteWire, onCancelWire, onCopyNodes, onPasteNodes, onDeleteNodes }: CanvasProps) => {
   const canvasRef = useRef<HTMLDivElement>(null)
 
@@ -41,10 +56,10 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     const type = e.dataTransfer.getData('node-type')
-    if (type) {
-      const rect = (e.target as HTMLDivElement).getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const y = e.clientY - rect.top
+    if (type && canvasRef.current) {
+      const rect = canvasRef.current.getBoundingClientRect()
+      const x = e.clientX - rect.left - canvasContentBounds.offsetX
+      const y = e.clientY - rect.top - canvasContentBounds.offsetY
       onDropNode(type, x, y)
     }
   }
@@ -57,16 +72,57 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
   const [draggingId, setDraggingId] = React.useState<string | null>(null)
   const [offset, setOffset] = React.useState<{x: number, y: number}>({x: 0, y: 0})
 
+  // Calculate the canvas content bounds based on node positions
+  const canvasContentBounds = React.useMemo(() => {
+    let minX = 0;
+    let minY = 0;
+    let maxX = 0;
+    let maxY = 0;
+
+    nodes.forEach(node => {
+      const estimatedNodeHeight = Math.max(
+        getPorts(node.properties, 'inputs').length,
+        getPorts(node.properties, 'outputs').length
+      ) * PORT_HEIGHT + BASE_NODE_HEIGHT;
+
+      minX = Math.min(minX, node.x);
+      minY = Math.min(minY, node.y);
+      maxX = Math.max(maxX, node.x + ESTIMATED_NODE_WIDTH);
+      maxY = Math.max(maxY, node.y + estimatedNodeHeight);
+    });
+
+    const width = Math.max(maxX - minX + CANVAS_PADDING * 2, 0);
+    const height = Math.max(maxY - minY + CANVAS_PADDING * 2, 0);
+
+    return {
+      width,
+      height,
+      offsetX: -minX + CANVAS_PADDING,
+      offsetY: -minY + CANVAS_PADDING,
+    };
+  }, [nodes]);
+
   const handleMouseDown = (e: React.MouseEvent, node: NodeType) => {
     e.stopPropagation()
+    if (!canvasRef.current) return
+    const canvasRect = canvasRef.current.getBoundingClientRect()
     setDraggingId(node.id)
-    setOffset({ x: e.clientX - node.x, y: e.clientY - node.y })
+    setOffset({
+      x: e.clientX - canvasRect.left - canvasContentBounds.offsetX - node.x,
+      y: e.clientY - canvasRect.top - canvasContentBounds.offsetY - node.y,
+    })
   }
 
   React.useEffect(() => {
     if (!draggingId) return
     const handleMouseMove = (e: MouseEvent) => {
-      onMoveNode(draggingId, e.clientX - offset.x, e.clientY - offset.y)
+      if (!canvasRef.current) return
+      const canvasRect = canvasRef.current.getBoundingClientRect()
+      onMoveNode(
+        draggingId,
+        e.clientX - canvasRect.left - canvasContentBounds.offsetX - offset.x,
+        e.clientY - canvasRect.top - canvasContentBounds.offsetY - offset.y
+      )
     }
     const handleMouseUp = () => setDraggingId(null)
     window.addEventListener('mousemove', handleMouseMove)
@@ -75,7 +131,7 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [draggingId, offset, onMoveNode])
+  }, [draggingId, offset, onMoveNode, canvasContentBounds.offsetX, canvasContentBounds.offsetY])
 
   // Store refs for all ports by node id and port index
   const outputPortRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
@@ -232,10 +288,11 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
     };
   }, []);
 
+
   return (
     <div
       ref={canvasRef}
-      style={{ flex: 1, minWidth: '70vw', maxWidth: '70vw', overflow: 'auto', position: 'relative', background: '#fff', border: '1px solid #ccc', margin: 8, userSelect: 'none', height: 'calc(100vh - 48px)' }}
+      style={{ flex: 1, width: '100%', minWidth: 0, overflow: 'auto', position: 'relative', background: '#fff', border: '1px solid #ccc', margin: 0, userSelect: 'none', height: '100%' }}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onClick={e => {
@@ -250,6 +307,14 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
       onMouseMove={handleCanvasLassoMove}
       onMouseUp={() => { handleCanvasLassoUp(); handleCanvasMouseUp(); }}
     >
+      {/* Content wrapper that expands based on node positions to enable scrolling */}
+      <div style={{
+        position: 'relative',
+        width: canvasContentBounds.width || 1,
+        height: canvasContentBounds.height || 1,
+        minWidth: '100%',
+        minHeight: '100%',
+      }}>
       {/* Draw wires */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}>
         <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
@@ -288,15 +353,6 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
       </div>
       {/* Render nodes after wires so port circles are on top */}
       {nodes.map(node => {
-        // Get port names from node properties (default to 1 input/output for example node)
-        function getPorts(props: Record<string, unknown>, key: 'inputs' | 'outputs'): string[] {
-          const val = props[key];
-          if (Array.isArray(val) && val.every(p => typeof p === 'string')) {
-            return val as string[];
-          }
-          // Only default if the property is missing (not present at all)
-          return [];
-        }
         const inputs = getPorts(node.properties, 'inputs')
         const outputs = getPorts(node.properties, 'outputs')
         const name = node.properties?.name as string
@@ -317,8 +373,8 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
             onContextMenu={e => onNodeContextMenu(e, node.id)}
             style={{
               position: 'absolute',
-              left: node.x,
-              top: node.y,
+              left: node.x + canvasContentBounds.offsetX,
+              top: node.y + canvasContentBounds.offsetY,
               padding: 12,
               paddingLeft: 28, // Increased to prevent input port clipping
               paddingRight: 28, // Increased to prevent output port clipping
@@ -426,6 +482,7 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
         />
       )}
       <h3 style={{ position: 'absolute', top: 8, left: 8, color: '#bbb' }}>Diagram</h3>
+      </div>
     </div>
   )
 }

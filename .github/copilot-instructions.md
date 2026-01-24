@@ -9,14 +9,11 @@ transformation library with load/apply/save capabilities.
 
 ## Core Architecture
 
-**Layout:** 30/70 split layout with palette on left, canvas on right, and a
-sliding property editor from the right. Fixed top bar for diagram name,
-save/load/save transformation/clear. Right sidebar hosts the
-Transformation Library.
+**Layout:** Fixed 20/60/20 viewport split with palette (20vw) on left, canvas (60vw) in center, and transformation library/property editor (20vw) on right. Fixed top bar (48px) for diagram name, save/load/save transformation/clear. All three columns are positioned to fill the viewport without horizontal overflow.
 
 **Key Components:**
 - `App.tsx` - Main application with state management and event handlers
-- `Canvas.tsx` - Main canvas area with node rendering, wiring, and interactions
+- `Canvas.tsx` - Main canvas area with node rendering, wiring, scrolling, and interactions
 - `Palette.tsx` - Draggable component palette with custom node creation
 - `PropertyEditor.tsx` - Sliding panel for editing node properties
 - `utils/transformation.ts` - Transformation matching and application helpers
@@ -39,10 +36,19 @@ Transformation Library.
 ### Wiring System
 - **Interactive Wiring:** Drag from output ports (blue circles) to input ports (green circles)
 - **Visual Ports:** Output ports on right edge, input ports on left edge of nodes
-- **Wire Rendering:** Right-angled polylines with SVG-based wire layer
+- **Wire Rendering:** Right-angled polylines with SVG-based wire layer that expands with canvas
 - **Draft Wires:** Dotted line preview while dragging connections
 - **Connection Rules:** One wire per input port, unlimited outputs
 - **Auto-cleanup:** Wires removed when connected nodes are deleted
+
+### Canvas Scrolling & Coordinate System
+- **Dynamic Bounds:** Canvas automatically calculates content bounds based on all node positions
+- **Negative Coordinates:** Supports nodes at any position including negative x/y values
+- **Offset System:** Maintains offsetX/offsetY to translate between viewport and node coordinates
+- **Auto Scrollbars:** Horizontal and vertical scrollbars appear when content exceeds viewport
+- **Content Wrapper:** Positioned div expands dynamically to encompass all nodes plus padding
+- **Constants:** ESTIMATED_NODE_WIDTH (150px), PORT_HEIGHT (28px), BASE_NODE_HEIGHT (60px), CANVAS_PADDING (100px)
+- **Coordinate Translation:** All drag, drop, and wire operations account for canvas offset
 
 ### Selection & Editing
 - **Multi-select:** Shift+click, lasso selection, or Ctrl/Cmd+A for select all

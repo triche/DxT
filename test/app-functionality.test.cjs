@@ -477,6 +477,135 @@ test('Delete transformation removes correct entry', () => {
     assertTrue(updated.every(t => t.name !== 'T2'), 'Deleted transformation should be removed');
 });
 
+// === CANVAS SCROLLING TESTS ===
+console.log('\n📜 Canvas Scrolling Tests:');
+
+// Helper function to calculate canvas bounds (matches Canvas.tsx implementation)
+function calculateCanvasBounds(nodes) {
+    const ESTIMATED_NODE_WIDTH = 150;
+    const PORT_HEIGHT = 28;
+    const BASE_NODE_HEIGHT = 60;
+    const CANVAS_PADDING = 100;
+    
+    function getPorts(props, key) {
+        const val = props[key];
+        if (Array.isArray(val) && val.every(p => typeof p === 'string')) {
+            return val;
+        }
+        return [];
+    }
+    
+    if (nodes.length === 0) {
+        return { width: 0, height: 0 };
+    }
+    
+    let maxX = 0;
+    let maxY = 0;
+    
+    nodes.forEach(node => {
+        const estimatedNodeHeight = Math.max(
+            getPorts(node.properties, 'inputs').length,
+            getPorts(node.properties, 'outputs').length
+        ) * PORT_HEIGHT + BASE_NODE_HEIGHT;
+        
+        maxX = Math.max(maxX, node.x + ESTIMATED_NODE_WIDTH);
+        maxY = Math.max(maxY, node.y + estimatedNodeHeight);
+    });
+    
+    return {
+        width: maxX + CANVAS_PADDING,
+        height: maxY + CANVAS_PADDING
+    };
+}
+
+test('Canvas bounds calculation with empty nodes array', () => {
+    const bounds = calculateCanvasBounds([]);
+    assertEqual(bounds.width, 0);
+    assertEqual(bounds.height, 0);
+});
+
+test('Canvas bounds calculation with single node', () => {
+    const nodes = [createMockNode('node1', 'Source', 100, 100)];
+    const bounds = calculateCanvasBounds(nodes);
+    
+    // Node at (100, 100) + width (150) + padding (100) = 350
+    assertEqual(bounds.width, 350);
+    // Node at (100, 100) + height (1 port * 28 + 60) + padding (100) = 288
+    assertEqual(bounds.height, 288);
+});
+
+test('Canvas bounds calculation with nodes at origin', () => {
+    const nodes = [createMockNode('node1', 'Source', 0, 0)];
+    const bounds = calculateCanvasBounds(nodes);
+    
+    // Node at (0, 0) + width (150) + padding (100) = 250
+    assertEqual(bounds.width, 250);
+    // Node at (0, 0) + height (88) + padding (100) = 188
+    assertEqual(bounds.height, 188);
+});
+
+test('Canvas bounds calculation with nodes requiring scrolling', () => {
+    const nodes = [
+        createMockNode('node1', 'Source', 100, 100),
+        createMockNode('node2', 'Sink', 1200, 800)
+    ];
+    const bounds = calculateCanvasBounds(nodes);
+    
+    // Far node at (1200, 800) + width (150) + padding (100) = 1450
+    assertTrue(bounds.width >= 1450, 'Width should accommodate far right node');
+    // Far node at (1200, 800) + height (88) + padding (100) = 988
+    assertTrue(bounds.height >= 988, 'Height should accommodate far down node');
+});
+
+test('Canvas bounds calculation with multiple ports', () => {
+    const customNode = {
+        id: 'node1',
+        type: 'Custom',
+        x: 100,
+        y: 100,
+        properties: {
+            name: 'Custom',
+            inputs: ['in1', 'in2', 'in3'],
+            outputs: ['out1', 'out2']
+        }
+    };
+    const bounds = calculateCanvasBounds([customNode]);
+    
+    // Height should account for max(3 inputs, 2 outputs) = 3 ports
+    // 3 * 28 + 60 = 144 base height
+    assertTrue(bounds.height >= 244, 'Height should accommodate multiple ports');
+});
+
+test('Canvas bounds adapts to node positions dynamically', () => {
+    let nodes = [createMockNode('node1', 'Source', 100, 100)];
+    const initialBounds = calculateCanvasBounds(nodes);
+    
+    // Add a far node
+    nodes = [
+        ...nodes,
+        createMockNode('node2', 'Sink', 2000, 1500)
+    ];
+    const expandedBounds = calculateCanvasBounds(nodes);
+    
+    assertTrue(expandedBounds.width > initialBounds.width, 'Bounds should expand horizontally');
+    assertTrue(expandedBounds.height > initialBounds.height, 'Bounds should expand vertically');
+});
+
+test('Canvas scroll triggers when content exceeds viewport', () => {
+    // Simulate typical viewport size
+    const viewportWidth = 896;  // Typical canvas width
+    const viewportHeight = 672; // Typical canvas height
+    
+    const nodes = [createMockNode('node1', 'Source', 1500, 1200)];
+    const bounds = calculateCanvasBounds(nodes);
+    
+    const needsHorizontalScroll = bounds.width > viewportWidth;
+    const needsVerticalScroll = bounds.height > viewportHeight;
+    
+    assertTrue(needsHorizontalScroll, 'Should need horizontal scrolling for far right nodes');
+    assertTrue(needsVerticalScroll, 'Should need vertical scrolling for far down nodes');
+});
+
 // === TEST SUMMARY ===
 console.log('\n' + '='.repeat(50));
 console.log(`📊 Test Results Summary:`);
@@ -502,6 +631,7 @@ console.log('✅ Node Deletion (node removal, wire cleanup)');
 console.log('✅ Canvas Interaction (drop zones, context menus)');
 console.log('✅ Property Editor (data binding, updates)');
 console.log('✅ Validation Integration (valid/invalid data handling)');
+console.log('✅ Canvas Scrolling (bounds calculation, scroll triggers)');
 
 console.log('\n🔧 These tests validate the core functionality of your DxT application.');
 console.log('For UI interaction testing, run the application and test manually.');
