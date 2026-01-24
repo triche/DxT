@@ -37,6 +37,7 @@ export type TransformationType = {
   inputPattern: string[]
   outputPattern: string[]
   replacementNodes: NodeType[]
+  internalWires?: WireType[]
 }
 
 const builtInNodeDefs: NodeTypeDef[] = [

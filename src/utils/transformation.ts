@@ -79,6 +79,9 @@ export const buildTransformationFromDiagram = (
   const inputPattern: string[] = []
   const outputPattern: string[] = []
 
+  // Create a set of node IDs for quick lookup
+  const nodeIdSet = new Set(nodes.map(n => n.id))
+
   nodes.forEach(node => {
     const inputs = getPortList(node.properties, 'inputs')
     inputs.forEach((name, idx) => {
@@ -93,11 +96,17 @@ export const buildTransformationFromDiagram = (
     })
   })
 
+  // Capture internal wires (wires connecting nodes within the transformation)
+  const internalWires = wires.filter(w => 
+    nodeIdSet.has(w.fromNodeId) && nodeIdSet.has(w.toNodeId)
+  ).map(wire => ({ ...wire }))
+
   return {
     name: diagramName || 'Untitled Transformation',
     inputPattern,
     outputPattern,
     replacementNodes: nodes.map(node => ({ ...node })),
+    internalWires: internalWires.length > 0 ? internalWires : undefined,
   }
 }
 
@@ -164,6 +173,22 @@ export const applyTransformationToSelection = (
   let wireCounter = 0
   const nextWireId = () => `wire-${Date.now()}-${wireCounter++}`
   const newWires: WireType[] = [...remainingWires]
+
+  // Recreate internal wires with remapped IDs
+  const internalWires = transformation.internalWires || []
+  internalWires.forEach(wire => {
+    const newFromId = idMap[wire.fromNodeId]
+    const newToId = idMap[wire.toNodeId]
+    if (newFromId && newToId) {
+      newWires.push({
+        id: nextWireId(),
+        fromNodeId: newFromId,
+        fromPortIdx: wire.fromPortIdx,
+        toNodeId: newToId,
+        toPortIdx: wire.toPortIdx,
+      })
+    }
+  })
 
   externalInputs.forEach(input => {
     const targets = inputPortMap[input.name]
