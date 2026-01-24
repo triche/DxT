@@ -101,9 +101,9 @@ save/load/clear.
 The application models two transformation types conceptually:
 
 1. **Refinement:** Replace a node with a more detailed/platform-specific
-	version.
+  version.
 2. **Optimization:** Replace a node or group with a more efficient
-	implementation.
+  implementation.
 
 These concepts inform the editor design but are not executed in the current
 codebase.
