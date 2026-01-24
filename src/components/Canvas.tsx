@@ -43,6 +43,12 @@ function getPorts(props: Record<string, unknown>, key: 'inputs' | 'outputs'): st
   return [];
 }
 
+// Constants for canvas size calculation
+const ESTIMATED_NODE_WIDTH = 150;
+const PORT_HEIGHT = 28;
+const BASE_NODE_HEIGHT = 60;
+const CANVAS_PADDING = 100;
+
 const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetSelectedNodeIds, onDeselect, onDropNode, onMoveNode, onNodeContextMenu, onStartWire, onWireDraftMove, onCompleteWire, onCancelWire, onCopyNodes, onPasteNodes, onDeleteNodes }: CanvasProps) => {
   const canvasRef = useRef<HTMLDivElement>(null)
 
@@ -241,12 +247,6 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
     };
   }, []);
 
-  // Constants for canvas size calculation
-  const ESTIMATED_NODE_WIDTH = 150;
-  const PORT_HEIGHT = 28;
-  const BASE_NODE_HEIGHT = 60;
-  const CANVAS_PADDING = 100;
-
   // Calculate the canvas content bounds based on node positions
   const canvasContentBounds = React.useMemo(() => {
     if (nodes.length === 0) {
@@ -294,8 +294,8 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
       {/* Content wrapper that expands based on node positions to enable scrolling */}
       <div style={{
         position: 'relative',
-        minWidth: Math.max(canvasContentBounds.width, canvasRef.current?.clientWidth || 0),
-        minHeight: Math.max(canvasContentBounds.height, canvasRef.current?.clientHeight || 0),
+        minWidth: canvasContentBounds.width,
+        minHeight: canvasContentBounds.height,
       }}>
       {/* Draw wires */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}>
