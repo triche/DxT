@@ -65,7 +65,7 @@ save/load/clear.
 - **Node Creation Modal:** Form to define node name and port specifications
 - **Palette Persistence:** Save/load palette configurations as JSON
 - **Name Conflict Resolution:** Auto-increment names when loading duplicate
-	types
+  types
 - **Visual Design:** Consistent styling with drag handles and port information
 
 ### File Operations
@@ -101,9 +101,9 @@ save/load/clear.
 The application models two transformation types conceptually:
 
 1. **Refinement:** Replace a node with a more detailed/platform-specific
-  version.
+	version.
 2. **Optimization:** Replace a node or group with a more efficient
-  implementation.
+	implementation.
 
 These concepts inform the editor design but are not executed in the current
 codebase.
