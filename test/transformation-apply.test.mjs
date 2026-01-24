@@ -62,7 +62,7 @@ test('Unwired ports become transformation patterns', () => {
   ];
   const transformation = buildTransformationFromDiagram(nodes, wires, 'My Diagram');
   assertEqual(transformation.name, 'My Diagram');
-  assertEqual(transformation.inputPattern.sort(), ['in1', 'in2']);
+  assertEqual([...transformation.inputPattern].sort(), ['in1', 'in2'].sort());
   assertEqual(transformation.outputPattern, ['out']);
   assertTrue(transformation.replacementNodes.length === 2, 'Expected nodes to be included');
 });
