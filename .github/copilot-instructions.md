@@ -73,7 +73,7 @@ save/load/clear.
 - **Data Structure:** Includes nodes, custom node definitions, wires, and diagram metadata
 - **Local File System:** Browser-based file operations with fallback support
 - **File System Access API:** Modern browsers get native file picker
-	integration
+  integration
 - **Error Handling:** Graceful fallback for unsupported browsers or invalid files
 
 ### Visual Design System
