@@ -11,6 +11,8 @@ const Palette: React.FC<PaletteProps> = ({ customNodeDefs, onAddCustomNodeDef })
   const [nodeName, setNodeName] = useState('')
   const [inputPorts, setInputPorts] = useState('')
   const [outputPorts, setOutputPorts] = useState('')
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [saveFilename, setSaveFilename] = useState('')
 
   const handleNewNode = () => {
     setShowModal(true)
@@ -41,7 +43,16 @@ const Palette: React.FC<PaletteProps> = ({ customNodeDefs, onAddCustomNodeDef })
   ]
 
   // Save Palette handler
-  const handleSavePalette = async () => {
+  const handleSavePalette = () => {
+    setShowSaveModal(true)
+    setSaveFilename('Palette')
+  }
+
+  const handleSavePaletteSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const filename = saveFilename.trim() || 'Palette'
+    setShowSaveModal(false)
+    
     // Exclude built-in nodes
     const nodesToSave = customNodeDefs;
     const json = JSON.stringify(nodesToSave, null, 2);
@@ -49,7 +60,7 @@ const Palette: React.FC<PaletteProps> = ({ customNodeDefs, onAddCustomNodeDef })
     if ('showSaveFilePicker' in window) {
       try {
         const handle = await (window as unknown as { showSaveFilePicker: (options: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }>; }) => Promise<unknown> }).showSaveFilePicker({
-          suggestedName: 'Palette.json',
+          suggestedName: `${filename}.json`,
           types: [{ description: 'JSON Files', accept: { 'application/json': ['.json'] } }],
         });
         // @ts-expect-error: File System Access API types are not standard
@@ -65,7 +76,7 @@ const Palette: React.FC<PaletteProps> = ({ customNodeDefs, onAddCustomNodeDef })
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'Palette.json';
+      a.download = `${filename}.json`;
       document.body.appendChild(a);
       a.click();
       setTimeout(() => {
@@ -207,6 +218,23 @@ const Palette: React.FC<PaletteProps> = ({ customNodeDefs, onAddCustomNodeDef })
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
               <button type="button" onClick={() => setShowModal(false)}>Cancel</button>
               <button type="submit">Create</button>
+            </div>
+          </form>
+        </div>
+      )}
+      {/* Save Palette Modal */}
+      {showSaveModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <form onSubmit={handleSavePaletteSubmit} style={{ background: '#fff', padding: 24, borderRadius: 8, minWidth: 320, boxShadow: '0 2px 16px rgba(0,0,0,0.2)' }}>
+            <h4>Save Palette</h4>
+            <div style={{ marginBottom: 12 }}>
+              <label>Filename (without .json):<br />
+                <input value={saveFilename} onChange={e => setSaveFilename(e.target.value)} style={{ width: '100%', background: '#fff', color: '#181818' }} required />
+              </label>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button type="button" onClick={() => setShowSaveModal(false)}>Cancel</button>
+              <button type="submit">Save</button>
             </div>
           </form>
         </div>
