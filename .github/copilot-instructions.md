@@ -2,20 +2,27 @@
 
 # DxT (Design by Transformation) Project Instructions
 
-This is a React + TypeScript web application for dataflow design with comprehensive visual editing capabilities. The project implements a sophisticated dataflow editor with transformation capabilities.
+This is a React + TypeScript web application for designing dataflow
+diagrams. The current implementation focuses on a visual editor (palette,
+canvas, wiring, selection, property editing, and JSON persistence). Runtime
+execution and transformation application are conceptual extensions, not
+implemented.
 
 ## Core Architecture
 
-**Layout:** 30/70 split layout with palette on left, canvas on right, and sliding property editor from right side.
+**Layout:** 30/70 split layout with palette on left, canvas on right, and a
+sliding property editor from the right. Fixed top bar for diagram name,
+save/load/clear.
 
 **Key Components:**
 - `App.tsx` - Main application with state management and event handlers
 - `Canvas.tsx` - Main canvas area with node rendering, wiring, and interactions
 - `Palette.tsx` - Draggable component palette with custom node creation
 - `PropertyEditor.tsx` - Sliding panel for editing node properties
-- Modular Canvas components: `Node.tsx`, `Port.tsx`, `WireLayer.tsx`, `Lasso.tsx`
+- Modular Canvas components (present but currently not the primary render
+	path): `Node.tsx`, `Port.tsx`, `WireLayer.tsx`, `Lasso.tsx`
 
-## Complete Feature Set
+## Feature Set (Current Implementation)
 
 ### Node Management
 - **Drag & Drop:** Drag components from palette to canvas
@@ -25,7 +32,8 @@ This is a React + TypeScript web application for dataflow design with comprehens
 - **Visual Feedback:** Selected nodes have blue border, glow effect, and dashed outline for multi-select
 - **Context Menu:** Right-click for delete option
 - **Node Types:** Built-in Source/Sink nodes + unlimited custom node types
-- **Properties:** Name, Python file path, description, metadata, input/output port definitions
+- **Properties:** Name, Python file path, description, metadata, input/output
+	port definitions
 
 ### Wiring System
 - **Interactive Wiring:** Drag from output ports (blue circles) to input ports (green circles)
@@ -56,14 +64,16 @@ This is a React + TypeScript web application for dataflow design with comprehens
 - **Custom Nodes:** Create new node types with configurable input/output ports
 - **Node Creation Modal:** Form to define node name and port specifications
 - **Palette Persistence:** Save/load palette configurations as JSON
-- **Name Conflict Resolution:** Auto-increment names when loading duplicate types
+- **Name Conflict Resolution:** Auto-increment names when loading duplicate
+	types
 - **Visual Design:** Consistent styling with drag handles and port information
 
 ### File Operations
 - **Save/Load:** JSON format for complete diagram persistence
 - **Data Structure:** Includes nodes, custom node definitions, wires, and diagram metadata
 - **Local File System:** Browser-based file operations with fallback support
-- **File System Access API:** Modern browsers get native file picker integration
+- **File System Access API:** Modern browsers get native file picker
+	integration
 - **Error Handling:** Graceful fallback for unsupported browsers or invalid files
 
 ### Visual Design System
@@ -87,16 +97,22 @@ This is a React + TypeScript web application for dataflow design with comprehens
 - **Development Tools:** ESLint, Vite, and modern React development practices
 
 ## Transformation Concepts
-The application supports two major transformation types:
-1. **Refinement:** Replace nodes with more detailed/platform-specific versions
-2. **Optimization:** Replace nodes/groups with more efficient implementations
 
-Both maintain input/output compatibility for seamless graph substitution.
+The application models two transformation types conceptually:
+
+1. **Refinement:** Replace a node with a more detailed/platform-specific
+  version.
+2. **Optimization:** Replace a node or group with a more efficient
+  implementation.
+
+These concepts inform the editor design but are not executed in the current
+codebase.
 
 ## Key Implementation Notes
-- Follow the specification in `docs/Theory_of_operation.md` for all features
-- Maintain consistent styling and interaction patterns across components
-- Ensure proper TypeScript typing for all props and state
-- Use proper React patterns with hooks and functional components
-- Implement comprehensive keyboard and mouse interaction support
-- Follow the existing code architecture and component organization
+
+- Follow the specification in docs/Theory_of_operation.md for all features.
+- Maintain consistent styling and interaction patterns across components.
+- Ensure proper TypeScript typing for all props and state.
+- Use proper React patterns with hooks and functional components.
+- Implement comprehensive keyboard and mouse interaction support.
+- Favor minimal, targeted edits that preserve current UX behavior.
