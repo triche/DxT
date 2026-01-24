@@ -21,7 +21,7 @@ Transformation Library.
 - `PropertyEditor.tsx` - Sliding panel for editing node properties
 - `utils/transformation.ts` - Transformation matching and application helpers
 - Modular Canvas components (present but currently not the primary render
-	path): `Node.tsx`, `Port.tsx`, `WireLayer.tsx`, `Lasso.tsx`
+  path): `Node.tsx`, `Port.tsx`, `WireLayer.tsx`, `Lasso.tsx`
 
 ## Feature Set (Current Implementation)
 
@@ -34,7 +34,7 @@ Transformation Library.
 - **Context Menu:** Right-click for delete and apply transformation
 - **Node Types:** Built-in Source/Sink nodes + unlimited custom node types
 - **Properties:** Name, Python file path, description, metadata, input/output
-	port definitions
+  port definitions
 
 ### Wiring System
 - **Interactive Wiring:** Drag from output ports (blue circles) to input ports (green circles)
@@ -66,7 +66,7 @@ Transformation Library.
 - **Node Creation Modal:** Form to define node name and port specifications
 - **Palette Persistence:** Save/load palette configurations as JSON
 - **Name Conflict Resolution:** Auto-increment names when loading duplicate
-	types
+  types
 - **Visual Design:** Consistent styling with drag handles and port information
 
 ### File Operations
@@ -76,7 +76,7 @@ Transformation Library.
 - **Data Structure:** Includes nodes, custom node definitions, wires, and diagram metadata
 - **Local File System:** Browser-based file operations with fallback support
 - **File System Access API:** Modern browsers get native file picker
-	integration
+  integration
 - **Error Handling:** Graceful fallback for unsupported browsers or invalid files
 
 ### Visual Design System
@@ -104,9 +104,9 @@ Transformation Library.
 The application models two transformation types conceptually:
 
 1. **Refinement:** Replace a node with a more detailed/platform-specific
-  version.
+   version.
 2. **Optimization:** Replace a node or group with a more efficient
-  implementation.
+   implementation.
 
 These concepts inform the editor design and are supported via a
 Transformation Library and transformation application.
