@@ -1,27 +1,90 @@
 # Design by Transformation (DxT)
 
-## Introduction
+DxT is a browser-based dataflow designer for creating and editing node
+graphs. Users drag node types from a palette onto a canvas, wire outputs to
+inputs, and edit node properties in a sliding panel. Diagrams and palettes
+can be saved/loaded as JSON with schema validation.
 
-Design by Transformation (DxT) is a web-based application that allows users
-to create dataflow designs by dragging and dropping components onto a
-canvas. The application provides a palette of components, each with
-configurable properties, which can be connected to form complex
-data-processing workflows.
+## Core Functionality (Concise)
 
-While the creation of the applications by hand is possible, the true power
-in the DxT application is the ability to apply transformations to dataflow
-designs. The two major types of transformations supported are:
+- Drag-and-drop node creation from a palette.
+- Interactive wiring with draft previews and connection rules.
+- Selection tools: click, shift-click, lasso, and select-all.
+- Clipboard: copy, paste (with wire preservation), delete.
+- Property editing with immediate updates.
+- Diagram save/load (JSON) and palette save/load.
 
-1. **Refinement**: Replace a node with a more detailed version of itself.
-   Often this may use more platform specific components, more complex
-   logic, or more detailed configuration.
-2. **Optimization**: Replace a node or group of nodes with a more efficient
-   version.
+## Installation
 
-In either case, the new graph of nodes must have the same number of inputs
-and outputs as the original node or group of nodes. This allows the new
-graph to be used in place of the original graph without changing the
-overall structure of the dataflow.
+```bash
+npm install
+```
+
+## Run the Application
+
+```bash
+npm run dev
+```
+
+Then open the local URL shown in the terminal.
+
+## Run with Docker (Local)
+
+### Option A: Docker CLI
+
+```bash
+docker build -t dxt .
+docker run --rm -p 8080:80 dxt
+```
+
+Open http://localhost:8080
+
+### Option B: Docker Compose
+
+```bash
+docker compose up --build
+```
+
+Open http://localhost:8080
+
+## Build for Production
+
+```bash
+npm run build
+```
+
+## Tests
+
+```bash
+npm test
+```
+
+## Basic Usage
+
+1. **Create nodes**: Drag a node type from the palette to the canvas.
+2. **Wire nodes**: Drag from an output port (blue) to an input port (green).
+3. **Move nodes**: Click and drag a node on the canvas.
+4. **Select nodes**: Click to select, Shift+click to multi-select, or drag
+   on empty canvas to lasso-select.
+5. **Edit properties**: Select a single node to open the sliding property
+   editor on the right.
+6. **Save/Load**: Use the top bar to save or load diagrams as JSON.
+7. **Palette management**: Create custom node types, then save/load palette
+   JSON from the palette panel.
+
+### Keyboard Shortcuts
+
+- Copy: Ctrl/Cmd+C
+- Paste: Ctrl/Cmd+V
+- Delete: Delete/Backspace
+- Select all: Ctrl/Cmd+A
+- Deselect: Escape
+
+## File Formats
+
+- **Diagram JSON**: Includes diagram name, nodes, custom node definitions,
+  and wires. Validated on load.
+- **Palette JSON**: Custom node definitions only (built-ins excluded).
 
 ## Project Structure
 
@@ -46,41 +109,21 @@ DxT/
 │   └── run-tests.cjs
 ├── public/                 # Static assets
 ├── index.html              # HTML entry point
+├── Dockerfile              # Container build (multi-stage)
+├── docker-compose.yml      # Local container orchestration
+├── nginx.conf              # Nginx config for SPA routing
 ├── package.json            # Dependencies and scripts
 ├── vite.config.ts          # Vite configuration
 └── tsconfig*.json          # TypeScript configuration
 ```
 
-## Getting Started
-
-### Installation
-
-```bash
-npm install
-```
-
-### Development
-
-```bash
-npm run dev
-```
-
-### Build
-
-```bash
-npm run build
-```
-
-### Testing
-
-```bash
-npm test
-```
-
-### Linting
+## Linting
 
 ```bash
 npm run lint
 ```
 
-For more details on testing, see [test/README.md](test/README.md).
+## Documentation
+
+- Theory of operation: [docs/Theory_of_operation.md](docs/Theory_of_operation.md)
+- Testing details: [test/README.md](test/README.md)
