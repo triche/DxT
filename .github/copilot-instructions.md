@@ -105,6 +105,12 @@ transformation library with load/apply/save capabilities.
 - **Browser Compatibility:** Cross-browser support with feature detection
 - **Development Tools:** ESLint, Vite, and modern React development practices
 
+## Testing Requirements (VS Code + GitHub)
+
+- **Default Expectation:** For any new feature or bug fix, add or update automated tests without being asked.
+- **Scope:** Cover core logic, UI interactions, and transformation behaviors as appropriate.
+- **Location:** Prefer existing test suites under `test/` and align with current patterns.
+
 ## Transformation Concepts
 
 The application models two transformation types conceptually:
