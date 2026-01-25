@@ -1,6 +1,6 @@
 import type { NodeType, WireType, TransformationType } from '../App'
 
-type ExternalInputPort = { name: string; wire: WireType | null }
+type ExternalInputPort = { name: string; wires: WireType[] }
 type ExternalOutputPort = { name: string; wires: WireType[] }
 
 export const getPortList = (props: Record<string, unknown>, key: 'inputs' | 'outputs'): string[] => {
@@ -37,9 +37,10 @@ export const getExternalPorts = (nodes: NodeType[], wires: WireType[], nodeIds: 
   selectedNodes.forEach(node => {
     const inputs = getPortList(node.properties, 'inputs')
     inputs.forEach((name, idx) => {
-      const wire = wires.find(w => w.toNodeId === node.id && w.toPortIdx === idx) || null
-      if (!wire || !selectedSet.has(wire.fromNodeId)) {
-        externalInputs.push({ name, wire })
+      const incoming = wires.filter(w => w.toNodeId === node.id && w.toPortIdx === idx)
+      const external = incoming.filter(w => !selectedSet.has(w.fromNodeId))
+      if (external.length > 0 || incoming.length === 0) {
+        externalInputs.push({ name, wires: external })
       }
     })
 
@@ -211,15 +212,15 @@ export const applyTransformationToSelection = (
     const targets = inputPortMap[input.name]
     if (!targets || targets.length === 0) return
     const target = targets.shift()!
-    if (input.wire) {
+    input.wires.forEach(wire => {
       newWires.push({
         id: nextWireId(),
-        fromNodeId: input.wire.fromNodeId,
-        fromPortIdx: input.wire.fromPortIdx,
+        fromNodeId: wire.fromNodeId,
+        fromPortIdx: wire.fromPortIdx,
         toNodeId: target.nodeId,
         toPortIdx: target.portIdx,
       })
-    }
+    })
   })
 
   externalOutputs.forEach(output => {

@@ -328,6 +328,47 @@ const run = async () => {
         assertEqual(wireFromSource.toNodeId, r1.id, 'Wire from source should go to NewA (unwired port), not NewB (internally wired port)');
     });
 
+    test('Apply transformation reconnects multiple wires to same input port', () => {
+        const nodes = [
+            { id: 'src1', type: 'Source', x: 50, y: 50, properties: { name: 'Source1', inputs: [], outputs: ['out'] } },
+            { id: 'src2', type: 'Source', x: 50, y: 150, properties: { name: 'Source2', inputs: [], outputs: ['out'] } },
+            { id: 'old', type: 'Old', x: 200, y: 100, properties: { name: 'Old', inputs: ['in'], outputs: ['out'] } },
+            { id: 'sink', type: 'Sink', x: 350, y: 100, properties: { name: 'Sink', inputs: ['in'], outputs: [] } }
+        ];
+        const wires = [
+            { id: 'w1', fromNodeId: 'src1', fromPortIdx: 0, toNodeId: 'old', toPortIdx: 0 },
+            { id: 'w2', fromNodeId: 'src2', fromPortIdx: 0, toNodeId: 'old', toPortIdx: 0 },
+            { id: 'w3', fromNodeId: 'old', fromPortIdx: 0, toNodeId: 'sink', toPortIdx: 0 }
+        ];
+
+        const transformation = {
+            name: 'Replace Old',
+            inputPattern: ['in'],
+            outputPattern: ['out'],
+            replacementNodes: [
+                { id: 'new', type: 'New', x: 200, y: 100, properties: { name: 'New', inputs: ['in'], outputs: ['out'] } }
+            ]
+        };
+
+        const result = applyTransformationToSelection(nodes, wires, ['old'], transformation);
+        assertTrue(result !== null, 'Expected transformation to apply');
+        assertTrue(result.nodes.length === 4, 'Expected 4 nodes (src1, src2, new, sink)');
+        
+        // Should have 3 wires: src1->new, src2->new, new->sink
+        assertTrue(result.wires.length === 3, `Expected 3 wires total, got ${result.wires.length}`);
+
+        const wiresFromSrc1 = result.wires.filter(w => w.fromNodeId === 'src1');
+        const wiresFromSrc2 = result.wires.filter(w => w.fromNodeId === 'src2');
+        assertTrue(wiresFromSrc1.length === 1, 'Expected 1 wire from src1');
+        assertTrue(wiresFromSrc2.length === 1, 'Expected 1 wire from src2');
+
+        const newNode = result.replacementNodes[0];
+        assertEqual(wiresFromSrc1[0].toNodeId, newNode.id, 'Wire from src1 should go to new node');
+        assertEqual(wiresFromSrc2[0].toNodeId, newNode.id, 'Wire from src2 should go to new node');
+        assertEqual(wiresFromSrc1[0].toPortIdx, 0, 'Both wires should go to port 0');
+        assertEqual(wiresFromSrc2[0].toPortIdx, 0, 'Both wires should go to port 0');
+    });
+
     console.log(`\n=== Test Summary: ${passed}/${total} passed ===`);
     if (passed !== total) {
         process.exitCode = 1;

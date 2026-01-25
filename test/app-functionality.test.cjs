@@ -118,20 +118,21 @@ test('Create valid wire connection', () => {
     assertEqual(wire.toPortIdx, 0);
 });
 
-test('Wire validation - no duplicate input connections', () => {
+test('Multiple wires can connect to the same input port', () => {
     const existingWires = [
         createMockWire('wire1', 'source1', 0, 'sink1', 0)
     ];
     
-    // Attempt to create duplicate connection to same input port
+    // Create another connection to the same input port
     const newWire = createMockWire('wire2', 'source2', 0, 'sink1', 0);
     
-    // Check if input port is already connected
-    const isInputOccupied = existingWires.some(w => 
-        w.toNodeId === newWire.toNodeId && w.toPortIdx === newWire.toPortIdx
+    // Both wires should be able to connect to the same input port
+    const allWires = [...existingWires, newWire];
+    const wiresToSameInput = allWires.filter(w => 
+        w.toNodeId === 'sink1' && w.toPortIdx === 0
     );
     
-    assertTrue(isInputOccupied, 'Should detect duplicate input connection');
+    assertEqual(wiresToSameInput.length, 2, 'Should allow multiple wires to the same input port');
 });
 
 test('Wire removal affects connected nodes', () => {
@@ -531,6 +532,19 @@ test('JSON serialization/deserialization', () => {
     assertEqual(parsedData.name, originalData.name);
     assertEqual(parsedData.nodes.length, originalData.nodes.length);
     assertEqual(parsedData.nodes[0].id, originalData.nodes[0].id);
+});
+
+test('Diagram load uses file picker with fallback', () => {
+    const appPath = path.resolve(__dirname, '../src/App.tsx');
+    const content = fs.readFileSync(appPath, 'utf8');
+    const filePickerPattern = /handleLoad[\s\S]*showOpenFilePicker/;
+    const fallbackPattern = /handleLoad[\s\S]*openDiagramFileInput\(\)/;
+    const inputPattern = /const\s+openDiagramFileInput[\s\S]*document\.body\.appendChild\(input\)[\s\S]*input\.click\(\)/;
+    const importPattern = /const\s+importDiagramFromJson[\s\S]*validateDiagram/;
+    assertTrue(filePickerPattern.test(content), 'Expected diagram load to use File System Access API when available');
+    assertTrue(fallbackPattern.test(content), 'Expected diagram load to fall back to input element');
+    assertTrue(inputPattern.test(content), 'Expected file input to be appended before click');
+    assertTrue(importPattern.test(content), 'Expected diagram load to validate imported JSON');
 });
 
 // === NODE DELETION TESTS ===
