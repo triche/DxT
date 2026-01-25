@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Design by Transformation &lpar;DxT&rpar;</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <h1 id="design-by-transformation-dxt">Design by Transformation (DxT)</h1>
+<p>DxT is a browser-based dataflow designer for creating and editing node
+graphs. Users drag node types from a palette onto a canvas, wire outputs to
+inputs, and edit node properties in a sliding panel. Diagrams and palettes
+can be saved/loaded as JSON with schema validation.</p>
+<p>Transformations can be loaded, saved, and applied to selections based on
+external port patterns.</p>
+<h2 id="core-functionality-concise">Core Functionality (Concise)</h2>
+<ul>
+<li>Drag-and-drop node creation from a palette.</li>
+<li>Interactive wiring with draft previews and connection rules.</li>
+<li>Selection tools for nodes and wires: click, shift-click, lasso, and select-all.</li>
+<li>Clipboard: copy, paste (with wire preservation), delete nodes and wires.</li>
+<li>Property editing with immediate updates.</li>
+<li>Diagram save/load (JSON) and palette save/load.</li>
+<li>Transformation library (load, save, delete) and apply from context menu.</li>
+</ul>
+<h2 id="installation">Installation</h2>
+<pre><code class="language-bash">npm install
+</code></pre>
+<h2 id="run-the-application">Run the Application</h2>
+<pre><code class="language-bash">npm run dev
+</code></pre>
+<p>Then open the local URL shown in the terminal.</p>
+<h2 id="run-with-docker-local">Run with Docker (Local)</h2>
+<h3 id="option-a-docker-cli">Option A: Docker CLI</h3>
+<pre><code class="language-bash">docker build -t dxt .
+docker run --<span class="hljs-built_in">rm</span> -p 8080:80 dxt
+</code></pre>
+<p>Open <a href="http://localhost:8080">http://localhost:8080</a></p>
+<h3 id="option-b-docker-compose">Option B: Docker Compose</h3>
+<pre><code class="language-bash">docker compose up --build
+</code></pre>
+<p>Open <a href="http://localhost:8080">http://localhost:8080</a></p>
+<h2 id="build-for-production">Build for Production</h2>
+<pre><code class="language-bash">npm run build
+</code></pre>
+<h2 id="tests">Tests</h2>
+<pre><code class="language-bash">npm <span class="hljs-built_in">test</span>
+</code></pre>
+<h2 id="basic-usage">Basic Usage</h2>
+<ol>
+<li><strong>Create nodes</strong>: Drag a node type from the palette to the canvas.</li>
+<li><strong>Wire nodes</strong>: Drag from an output port (blue) to an input port (green).</li>
+<li><strong>Move nodes</strong>: Click and drag a node on the canvas.</li>
+<li><strong>Select nodes</strong>: Click to select, Shift+click to multi-select, or drag
+on empty canvas to lasso-select.</li>
+<li><strong>Select wires</strong>: Click on a wire to select it, Shift+click to multi-select
+wires, or use lasso selection. Selected wires appear blue and thicker.</li>
+<li><strong>Delete nodes/wires</strong>: Select elements and press Delete/Backspace, or
+right-click and choose Delete from the context menu.</li>
+<li><strong>Undo</strong>: Press Ctrl/Cmd+Z to undo the last diagram change (up to 20 actions).</li>
+<li><strong>Edit properties</strong>: Select a single node to open the sliding property
+editor on the right.</li>
+<li><strong>Save/Load</strong>: Use the top bar to save or load diagrams as JSON.</li>
+<li><strong>Palette management</strong>: Create custom node types, then save/load palette
+JSON from the palette panel.</li>
+<li><strong>Save transformation</strong>: Use Save Transformation to export the current
+diagram into a transformation JSON (based on unwired ports). Choose to
+add it to the Transformation Library.</li>
+<li><strong>Apply transformation</strong>: Right-click a node selection and choose
+Apply Transformation from the context menu.</li>
+</ol>
+<h3 id="keyboard-shortcuts">Keyboard Shortcuts</h3>
+<ul>
+<li>Copy: Ctrl/Cmd+C (copies selected nodes)</li>
+<li>Paste: Ctrl/Cmd+V (pastes nodes with offset)</li>
+<li>Delete: Delete/Backspace (removes selected nodes and wires)</li>
+<li>Undo: Ctrl/Cmd+Z (undoes last diagram change; 20-step buffer)</li>
+<li>Select all: Ctrl/Cmd+A (selects all nodes and wires)</li>
+<li>Deselect: Escape (clears all selections)</li>
+</ul>
+<h2 id="file-formats">File Formats</h2>
+<ul>
+<li><strong>Diagram JSON</strong>: Includes diagram name, nodes, custom node definitions,
+and wires. Validated on load.</li>
+<li><strong>Palette JSON</strong>: Custom node definitions only (built-ins excluded).</li>
+<li><strong>Transformation JSON</strong>: Includes transformation name, input/output
+patterns, and replacement nodes.</li>
+</ul>
+<h2 id="project-structure">Project Structure</h2>
+<pre><code>DxT/
+├── docs/                   # Documentation
+│   ├── ImplementationOptions.md
+│   └── Theory_of_operation.md
+├── src/                    # Source code
+│   ├── components/         # React components
+│   │   ├── Canvas/         # Canvas-related components
+│   │   ├── Canvas.tsx      # Main canvas component
+│   │   ├── Palette.tsx     # Component palette
+│   │   └── PropertyEditor.tsx
+│   ├── schemas/            # JSON schemas for validation
+│   ├── utils/              # Utility functions
+│   ├── App.tsx             # Main application component
+│   └── main.tsx            # Application entry point
+├── test/                   # Test suite
+│   ├── validation-test.cjs
+│   ├── app-functionality.test.cjs
+│   ├── transformation-applicability.test.cjs
+│   ├── transformation-apply.test.cjs
+│   └── run-tests.cjs
+├── samples/                # Sample JSON files
+│   ├── diagram.json
+│   ├── palette.json
+│   └── transformation.json
+├── public/                 # Static assets
+├── index.html              # HTML entry point
+├── Dockerfile              # Container build (multi-stage)
+├── docker-compose.yml      # Local container orchestration
+├── nginx.conf              # Nginx config for SPA routing
+├── package.json            # Dependencies and scripts
+├── vite.config.ts          # Vite configuration
+└── tsconfig*.json          # TypeScript configuration
+</code></pre>
+<h2 id="linting">Linting</h2>
+<pre><code class="language-bash">npm run lint
+</code></pre>
+<h2 id="documentation">Documentation</h2>
+<ul>
+<li>Theory of operation: <a href="docs/Theory_of_operation.html">docs/Theory_of_operation.md</a></li>
+<li>Testing details: <a href="test/README.html">test/README.md</a></li>
+</ul>
+
+            
+            
+        </body>
+        </html>
