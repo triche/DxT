@@ -49,6 +49,8 @@ Open http://localhost:8080
 docker compose up --build
 ```
 
+Open http://localhost:8080
+
 ### Option C: Docker Compose Detached
 
 ```bash
