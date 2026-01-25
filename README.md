@@ -49,6 +49,12 @@ Open http://localhost:8080
 docker compose up --build
 ```
 
+### Option C: Docker Compose Detached
+
+```bash
+docker compose up -d --build
+```
+
 Open http://localhost:8080
 
 ## Build for Production
