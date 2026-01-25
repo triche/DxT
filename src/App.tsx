@@ -99,8 +99,8 @@ function App() {
   }, [wires])
 
   const cloneSnapshot = (snapshotNodes: NodeType[], snapshotWires: WireType[]): DiagramSnapshot => ({
-    nodes: structuredClone(snapshotNodes),
-    wires: structuredClone(snapshotWires)
+    nodes: JSON.parse(JSON.stringify(snapshotNodes)) as NodeType[],
+    wires: JSON.parse(JSON.stringify(snapshotWires)) as WireType[]
   })
 
   const pushUndoSnapshot = (snapshot: DiagramSnapshot) => {
