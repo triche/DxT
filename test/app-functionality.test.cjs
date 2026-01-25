@@ -1,6 +1,9 @@
 // Comprehensive test suite for DxT application functionality
 console.log('=== DxT Application Functionality Tests ===\n');
 
+const fs = require('fs');
+const path = require('path');
+
 // Test utilities
 function runTest(testName, testFn) {
     try {
@@ -198,6 +201,16 @@ test('Palette save filename with user input', () => {
     saveFilename = 'MyCustomPalette';
     
     assertEqual(saveFilename, 'MyCustomPalette');
+});
+
+// === HEADER BRANDING TESTS ===
+console.log('\n🧭 Header Branding Tests:');
+
+test('Branding bar includes logo and title', () => {
+    const appPath = path.resolve(__dirname, '../src/App.tsx');
+    const content = fs.readFileSync(appPath, 'utf8');
+    assertTrue(content.includes('Design by Transformation'), 'Expected branding title to be present');
+    assertTrue(content.includes('/DxT.png'), 'Expected branding logo path to be present');
 });
 
 test('Palette save filename trimming and fallback', () => {
