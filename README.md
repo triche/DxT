@@ -150,3 +150,7 @@ npm run lint
 
 - Theory of operation: [docs/Theory_of_operation.md](docs/Theory_of_operation.md)
 - Testing details: [test/README.md](test/README.md)
+
+## License
+
+This repository is licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE).
