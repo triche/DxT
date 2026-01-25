@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Palette from './components/Palette'
 import Canvas from './components/Canvas'
 import PropertyEditor from './components/PropertyEditor'
@@ -65,6 +65,8 @@ function App() {
   const [transformationErrorMessage, setTransformationErrorMessage] = useState<string>('')
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeIds: string[]; wireIds: string[] } | null>(null)
   const [transformationContextMenu, setTransformationContextMenu] = useState<{ x: number; y: number; index: number } | null>(null)
+  const contextMenuRef = useRef<HTMLDivElement | null>(null)
+  const transformationContextMenuRef = useRef<HTMLDivElement | null>(null)
   const [wires, setWires] = useState<WireType[]>([])
   const [wireDraft, setWireDraft] = useState<{
     fromNodeId: string
@@ -103,6 +105,7 @@ function App() {
       setSelectedNodeIds(ids => ids.includes(id) ? ids : [...ids, id])
     } else {
       setSelectedNodeIds([id])
+      setSelectedWireIds([])
     }
   }
 
@@ -111,10 +114,12 @@ function App() {
 
   // Handler for selecting wires (single or multi)
   const handleSelectWire = (id: string, multi: boolean = false) => {
-    // Clear node selection when selecting wires
-    setSelectedNodeIds([])
+    // Clear node selection when selecting a single wire
+    if (!multi) {
+      setSelectedNodeIds([])
+    }
     if (multi) {
-      setSelectedWireIds(ids => ids.includes(id) ? ids.filter(existingId => existingId !== id) : [...ids, id])
+      setSelectedWireIds(ids => ids.includes(id) ? ids : [...ids, id])
     } else {
       setSelectedWireIds([id])
     }
@@ -123,10 +128,6 @@ function App() {
   // Handler to set selected wire IDs directly (for lasso selection)
   const handleSetSelectedWireIds = (ids: string[]) => {
     setSelectedWireIds(ids)
-    // Clear node selection when selecting wires
-    if (ids.length > 0) {
-      setSelectedNodeIds([])
-    }
   }
 
   // Handler for canvas click to clear selection
@@ -378,21 +379,37 @@ function App() {
   const handleNodeContextMenu = (e: React.MouseEvent, nodeId: string) => {
     e.preventDefault()
     const nodeIds = selectedNodeIds.includes(nodeId) ? selectedNodeIds : [nodeId]
+    const wireIds = selectedNodeIds.includes(nodeId) ? selectedWireIds : []
     setSelectedNodeIds(nodeIds)
-    setSelectedWireIds([]) // Clear wire selection
-    setContextMenu({ x: e.clientX, y: e.clientY, nodeIds, wireIds: [] })
+    setSelectedWireIds(wireIds)
+    setContextMenu({ x: e.clientX, y: e.clientY, nodeIds, wireIds })
   }
 
   const handleWireContextMenu = (e: React.MouseEvent, wireId: string) => {
     e.preventDefault()
     const wireIds = selectedWireIds.includes(wireId) ? selectedWireIds : [wireId]
+    const nodeIds = selectedWireIds.includes(wireId) ? selectedNodeIds : []
     setSelectedWireIds(wireIds)
-    setSelectedNodeIds([]) // Clear node selection
-    setContextMenu({ x: e.clientX, y: e.clientY, nodeIds: [], wireIds })
+    setSelectedNodeIds(nodeIds)
+    setContextMenu({ x: e.clientX, y: e.clientY, nodeIds, wireIds })
   }
 
   const handleCloseContextMenu = () => setContextMenu(null)
-  const handleCloseTransformationContextMenu = () => setTransformationContextMenu(null)
+
+  useEffect(() => {
+    if (!contextMenu && !transformationContextMenu) return
+    const handlePointerDown = (e: MouseEvent) => {
+      const target = e.target as Node
+      const clickedContextMenu = contextMenuRef.current?.contains(target)
+      const clickedTransformationMenu = transformationContextMenuRef.current?.contains(target)
+      if (!clickedContextMenu && !clickedTransformationMenu) {
+        setContextMenu(null)
+        setTransformationContextMenu(null)
+      }
+    }
+    window.addEventListener('mousedown', handlePointerDown)
+    return () => window.removeEventListener('mousedown', handlePointerDown)
+  }, [contextMenu, transformationContextMenu])
 
   const handleTransformationContextMenu = (e: React.MouseEvent, index: number) => {
     e.preventDefault()
@@ -448,28 +465,17 @@ function App() {
     setWires(wires => [...wires, ...newWires]);
   };
 
-  // Delete selected nodes
-  const handleDeleteNodes = () => {
-    if (selectedNodeIds.length === 0) return;
-    setNodes(nodes => nodes.filter(n => !selectedNodeIds.includes(n.id)));
-    setWires(wires => wires.filter(w => !selectedNodeIds.includes(w.fromNodeId) && !selectedNodeIds.includes(w.toNodeId)));
-    setSelectedNodeIds([]);
-  };
-
-  // Delete selected wires
-  const handleDeleteWires = () => {
-    if (selectedWireIds.length === 0) return;
-    setWires(wires => wires.filter(w => !selectedWireIds.includes(w.id)));
-    setSelectedWireIds([]);
-  };
-
   // Delete whatever is currently selected (nodes or wires)
   const handleDelete = () => {
-    if (selectedNodeIds.length > 0) {
-      handleDeleteNodes();
-    } else if (selectedWireIds.length > 0) {
-      handleDeleteWires();
-    }
+    if (selectedNodeIds.length === 0 && selectedWireIds.length === 0) return
+    setNodes(nodes => nodes.filter(n => !selectedNodeIds.includes(n.id)))
+    setWires(wires => wires.filter(w =>
+      !selectedWireIds.includes(w.id) &&
+      !selectedNodeIds.includes(w.fromNodeId) &&
+      !selectedNodeIds.includes(w.toNodeId)
+    ))
+    setSelectedNodeIds([])
+    setSelectedWireIds([])
   };
 
   // Clear canvas
@@ -602,7 +608,11 @@ function App() {
       </div>
       {/* Context Menu */}
       {contextMenu && (
-        <div style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, background: '#fff', border: '1px solid #ccc', zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }} onMouseLeave={handleCloseContextMenu}>
+        <div
+          ref={contextMenuRef}
+          style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, background: '#fff', border: '1px solid #ccc', zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
+          onMouseDown={e => e.stopPropagation()}
+        >
           <div style={{ padding: 8, cursor: 'pointer', color: 'red' }} onClick={() => { handleDelete(); handleCloseContextMenu(); }}>Delete</div>
           {contextMenu.nodeIds.length > 0 && (
             <>
@@ -626,8 +636,9 @@ function App() {
       )}
       {transformationContextMenu && (
         <div
+          ref={transformationContextMenuRef}
           style={{ position: 'fixed', top: transformationContextMenu.y, left: transformationContextMenu.x, background: '#fff', border: '1px solid #ccc', zIndex: 110, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
-          onMouseLeave={handleCloseTransformationContextMenu}
+          onMouseDown={e => e.stopPropagation()}
         >
           <div
             style={{ padding: 8, cursor: 'pointer', color: 'red' }}

@@ -177,6 +177,9 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
   // Lasso selection state
   const [lasso, setLasso] = React.useState<null | { start: { x: number; y: number }; end: { x: number; y: number } }>(null)
   const lassoActive = React.useRef(false)
+  const lassoPending = React.useRef(false)
+  const lassoStartPos = React.useRef<{ x: number; y: number } | null>(null)
+  const LASSO_DRAG_THRESHOLD = 4
   // Track the last set of lasso-selected node and wire IDs
   const lassoSelectedNodeIds = React.useRef<string[]>([])
   const lassoSelectedWireIds = React.useRef<string[]>([])
@@ -191,19 +194,36 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
     return { x: e.clientX - rect.left, y: e.clientY - rect.top }
   }
 
+  const isEventOnNode = (target: EventTarget | null) => {
+    const node = target as Node | null
+    if (!node) return false
+    return Object.values(nodeDivRefs.current).some(el => el && el.contains(node))
+  }
+
   // Start lasso on empty canvas (not on a node)
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
     // Only start lasso if not clicking on a node
     // Use e.currentTarget to reliably detect the canvas div
     if (e.button === 0 && e.currentTarget === canvasRef.current) {
       const pos = getCanvasPos(e)
-      setLasso({ start: pos, end: pos })
-      lassoActive.current = true
+      lassoStartPos.current = pos
+      lassoPending.current = true
+      lassoActive.current = false
+      setLasso(null)
     }
   }
 
   // Update lasso on mouse move
   const handleCanvasLassoMove = (e: React.MouseEvent) => {
+    if (lassoPending.current && !lassoActive.current && lassoStartPos.current) {
+      const pos = getCanvasPos(e)
+      const dx = pos.x - lassoStartPos.current.x
+      const dy = pos.y - lassoStartPos.current.y
+      if (Math.hypot(dx, dy) >= LASSO_DRAG_THRESHOLD) {
+        lassoActive.current = true
+        setLasso({ start: lassoStartPos.current, end: pos })
+      }
+    }
     if (lassoActive.current && lasso && canvasRef.current) {
       const newEnd = getCanvasPos(e)
       setLasso(l => l ? { ...l, end: newEnd } : null)
@@ -253,11 +273,16 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
   const handleCanvasLassoUp = () => {
     if (lassoActive.current && lasso && canvasRef.current) {
       lassoActive.current = false
+      lassoPending.current = false
+      lassoStartPos.current = null
       onSetSelectedNodeIds(lassoSelectedNodeIds.current)
       onSetSelectedWireIds(lassoSelectedWireIds.current)
       setLasso(null)
       lassoJustCompleted.current = true
+      return
     }
+    lassoPending.current = false
+    lassoStartPos.current = null
   }
 
   // Keyboard shortcuts for copy, paste, delete
@@ -326,20 +351,22 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
           lassoJustCompleted.current = false
           return
         }
-        if (e.target === e.currentTarget) onDeselect()
+        if (!isEventOnNode(e.target)) onDeselect()
       }}
       onMouseDown={handleCanvasMouseDown}
       onMouseMove={handleCanvasLassoMove}
       onMouseUp={() => { handleCanvasLassoUp(); handleCanvasMouseUp(); }}
     >
       {/* Content wrapper that expands based on node positions to enable scrolling */}
-      <div style={{
+      <div
+        style={{
         position: 'relative',
         width: canvasContentBounds.width || 1,
         height: canvasContentBounds.height || 1,
         minWidth: '100%',
         minHeight: '100%',
-      }}>
+        }}
+      >
       {/* Draw wires */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
         <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
@@ -364,6 +391,9 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
                   stroke="transparent"
                   strokeWidth={WIRE_CLICK_TARGET_WIDTH}
                   style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
+                  onMouseDown={e => {
+                    e.stopPropagation()
+                  }}
                   onClick={(e) => {
                     e.stopPropagation()
                     onSelectWire(wire.id, e.shiftKey)
