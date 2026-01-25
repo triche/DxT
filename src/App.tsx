@@ -4,6 +4,7 @@ import Canvas from './components/Canvas'
 import PropertyEditor from './components/PropertyEditor'
 import { validateDiagram, validateTransformation, formatValidationErrors } from './utils/validation'
 import { applyTransformationToSelection, buildTransformationFromDiagram, getApplicableTransformations, getPortList } from './utils/transformation'
+import { ESTIMATED_NODE_WIDTH, PORT_HEIGHT, BASE_NODE_HEIGHT } from './utils/constants'
 import './App.css'
 import './index.css'
 
@@ -52,9 +53,6 @@ const builtInNodeDefs: NodeTypeDef[] = [
 
 const areStringArraysEqual = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i])
 
-const ESTIMATED_NODE_WIDTH = 150
-const PORT_HEIGHT = 28
-const BASE_NODE_HEIGHT = 60
 const CLEANUP_COLUMN_GAP = 48
 const CLEANUP_ROW_GAP = 16
 const CLEANUP_PADDING = 24

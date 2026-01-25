@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useLayoutEffect } from 'react';
 import type { NodeType } from '../App'
+import { ESTIMATED_NODE_WIDTH, PORT_HEIGHT, BASE_NODE_HEIGHT } from '../utils/constants';
 
 type WireType = {
   id: string
@@ -51,9 +52,6 @@ function getPorts(props: Record<string, unknown>, key: 'inputs' | 'outputs'): st
 }
 
 // Constants for canvas size calculation
-const ESTIMATED_NODE_WIDTH = 150;
-const PORT_HEIGHT = 28;
-const BASE_NODE_HEIGHT = 60;
 const CANVAS_PADDING = 100;
 const WIRE_CLICK_TARGET_WIDTH = 12; // Width of invisible polyline for easier wire clicking
 
