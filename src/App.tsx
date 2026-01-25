@@ -367,39 +367,76 @@ function App() {
       URL.revokeObjectURL(url)
     }, 0)
   }
-  // Load from local filesystem as JSON file
-  const handleLoad = () => {
+  const importDiagramFromJson = (text: string) => {
+    try {
+      const data = JSON.parse(text)
+
+      // Validate the loaded data
+      const validationErrors = validateDiagram(data)
+      if (validationErrors.length > 0) {
+        const errorMessage = formatValidationErrors(validationErrors)
+        alert(`Invalid diagram file:\n${errorMessage}`)
+        return
+      }
+
+      setDiagramName(data.name || 'Untitled Diagram')
+      setNodes(data.nodes || [])
+      setCustomNodeDefs(data.customNodeDefs || [])
+      setWires(data.wires || [])
+      setSelectedNodeIds([])
+      setSelectedWireIds([])
+      setContextMenu(null)
+      setWireDraft(null)
+    } catch (error) {
+      alert(`Failed to load diagram: ${error instanceof Error ? error.message : 'Invalid JSON file.'}`)
+    }
+  }
+
+  const openDiagramFileInput = () => {
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = '.json,application/json'
-    input.onchange = (e: Event) => {
+    input.value = ''
+    input.onchange = async (e: Event) => {
       const file = (e.target as HTMLInputElement).files?.[0]
+      document.body.removeChild(input)
       if (!file) return
-      const reader = new FileReader()
-      reader.onload = (event) => {
+      try {
+        const text = await file.text()
+        importDiagramFromJson(text)
+      } catch (error) {
+        alert(`Failed to read diagram file: ${error instanceof Error ? error.message : 'Unknown error.'}`)
+      }
+    }
+    document.body.appendChild(input)
+    input.click()
+  }
+
+  // Load from local filesystem as JSON file
+  const handleLoad = () => {
+    if ('showOpenFilePicker' in window) {
+      ;(async () => {
         try {
-          const data = JSON.parse(event.target?.result as string)
-          
-          // Validate the loaded data
-          const validationErrors = validateDiagram(data)
-          if (validationErrors.length > 0) {
-            const errorMessage = formatValidationErrors(validationErrors)
-            alert(`Invalid diagram file:\n${errorMessage}`)
+          const [fileHandle] = await (window as unknown as { showOpenFilePicker: (options: { types?: Array<{ description: string; accept: Record<string, string[]> }>; multiple?: boolean; }) => Promise<unknown[]> }).showOpenFilePicker({
+            types: [{ description: 'JSON Files', accept: { 'application/json': ['.json'] } }],
+            multiple: false,
+          })
+          // @ts-expect-error: File System Access API types are not standard
+          const file = await fileHandle.getFile()
+          const text = await file.text()
+          importDiagramFromJson(text)
+        } catch (error) {
+          if (error && typeof error === 'object' && 'name' in error && (error as { name?: string }).name === 'AbortError') {
             return
           }
-          
-          setDiagramName(data.name || 'Untitled Diagram')
-          setNodes(data.nodes || [])
-          setCustomNodeDefs(data.customNodeDefs || [])
-          setWires(data.wires || [])
-          setSelectedNodeIds([])
-        } catch (error) {
-          alert(`Failed to load diagram: ${error instanceof Error ? error.message : 'Invalid JSON file.'}`)
+          alert(`Failed to open diagram file: ${error instanceof Error ? error.message : 'Unknown error.'}`)
+          openDiagramFileInput()
         }
-      }
-      reader.readAsText(file)
+      })()
+      return
     }
-    input.click()
+
+    openDiagramFileInput()
   }
 
   const saveTransformationToFile = (transformation: TransformationType) => {

@@ -534,6 +534,19 @@ test('JSON serialization/deserialization', () => {
     assertEqual(parsedData.nodes[0].id, originalData.nodes[0].id);
 });
 
+test('Diagram load uses file picker with fallback', () => {
+    const appPath = path.resolve(__dirname, '../src/App.tsx');
+    const content = fs.readFileSync(appPath, 'utf8');
+    const filePickerPattern = /handleLoad[\s\S]*showOpenFilePicker/;
+    const fallbackPattern = /handleLoad[\s\S]*openDiagramFileInput\(\)/;
+    const inputPattern = /const\s+openDiagramFileInput[\s\S]*document\.body\.appendChild\(input\)[\s\S]*input\.click\(\)/;
+    const importPattern = /const\s+importDiagramFromJson[\s\S]*validateDiagram/;
+    assertTrue(filePickerPattern.test(content), 'Expected diagram load to use File System Access API when available');
+    assertTrue(fallbackPattern.test(content), 'Expected diagram load to fall back to input element');
+    assertTrue(inputPattern.test(content), 'Expected file input to be appended before click');
+    assertTrue(importPattern.test(content), 'Expected diagram load to validate imported JSON');
+});
+
 // === NODE DELETION TESTS ===
 console.log('\n🗑️  Node Deletion Tests:');
 
