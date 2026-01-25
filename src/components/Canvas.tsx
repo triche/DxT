@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useLayoutEffect } from 'react';
 import type { NodeType } from '../App'
 
 type WireType = {
@@ -27,6 +27,8 @@ type CanvasProps = {
   onDeselect: () => void
   onDropNode: (type: string, x: number, y: number) => void
   onMoveNode: (id: string, x: number, y: number) => void
+  onMoveNodeStart: (id: string) => void
+  onMoveNodeEnd: (id: string) => void
   onNodeContextMenu: (e: React.MouseEvent, nodeId: string) => void
   onWireContextMenu: (e: React.MouseEvent, wireId: string) => void
   onStartWire: (fromNodeId: string, fromPortIdx: number, start: { x: number; y: number }) => void
@@ -36,6 +38,7 @@ type CanvasProps = {
   onCopyNodes: () => void;
   onPasteNodes: () => void;
   onDeleteNodes: () => void;
+  onUndo: () => void;
 }
 
 // Helper function to get ports from node properties
@@ -54,7 +57,7 @@ const BASE_NODE_HEIGHT = 60;
 const CANVAS_PADDING = 100;
 const WIRE_CLICK_TARGET_WIDTH = 12; // Width of invisible polyline for easier wire clicking
 
-const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onSelectNode, onSelectWire, onSetSelectedNodeIds, onSetSelectedWireIds, onDeselect, onDropNode, onMoveNode, onNodeContextMenu, onWireContextMenu, onStartWire, onWireDraftMove, onCompleteWire, onCancelWire, onCopyNodes, onPasteNodes, onDeleteNodes }: CanvasProps) => {
+const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onSelectNode, onSelectWire, onSetSelectedNodeIds, onSetSelectedWireIds, onDeselect, onDropNode, onMoveNode, onMoveNodeStart, onMoveNodeEnd, onNodeContextMenu, onWireContextMenu, onStartWire, onWireDraftMove, onCompleteWire, onCancelWire, onCopyNodes, onPasteNodes, onDeleteNodes, onUndo }: CanvasProps) => {
   const canvasRef = useRef<HTMLDivElement>(null)
 
   // Drop handler for new nodes
@@ -76,6 +79,7 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
   // Drag state
   const [draggingId, setDraggingId] = React.useState<string | null>(null)
   const [offset, setOffset] = React.useState<{x: number, y: number}>({x: 0, y: 0})
+  const [wireLayoutVersion, setWireLayoutVersion] = React.useState(0)
 
   // Calculate the canvas content bounds based on node positions
   const canvasContentBounds = React.useMemo(() => {
@@ -109,8 +113,11 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
 
   const handleMouseDown = (e: React.MouseEvent, node: NodeType) => {
     e.stopPropagation()
+    // Prevent starting a new drag if one is already in progress
+    if (draggingId !== null) return
     if (!canvasRef.current) return
     const canvasRect = canvasRef.current.getBoundingClientRect()
+    onMoveNodeStart(node.id)
     setDraggingId(node.id)
     setOffset({
       x: e.clientX - canvasRect.left - canvasContentBounds.offsetX - node.x,
@@ -129,14 +136,26 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
         e.clientY - canvasRect.top - canvasContentBounds.offsetY - offset.y
       )
     }
-    const handleMouseUp = () => setDraggingId(null)
+    const handleMouseUp = () => {
+      onMoveNodeEnd(draggingId)
+      setDraggingId(null)
+    }
     window.addEventListener('mousemove', handleMouseMove)
     window.addEventListener('mouseup', handleMouseUp)
     return () => {
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [draggingId, offset, onMoveNode, canvasContentBounds.offsetX, canvasContentBounds.offsetY])
+  }, [draggingId, offset, onMoveNode, onMoveNodeEnd, canvasContentBounds.offsetX, canvasContentBounds.offsetY])
+
+  // Re-render wires after layout updates (e.g., undoing a move)
+  useLayoutEffect(() => {
+    if (!canvasRef.current) return
+    const handle = window.requestAnimationFrame(() => {
+      setWireLayoutVersion(v => v + 1)
+    })
+    return () => window.cancelAnimationFrame(handle)
+  }, [nodes, wires, canvasContentBounds.offsetX, canvasContentBounds.offsetY])
 
   // Store refs for all ports by node id and port index
   const outputPortRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
@@ -301,6 +320,9 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
         onDeleteNodes();
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        onUndo();
       } else if (e.key === 'Escape') {
         onDeselect();
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
@@ -312,7 +334,7 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onCopyNodes, onPasteNodes, onDeleteNodes, onDeselect, onSetSelectedNodeIds, onSetSelectedWireIds, nodes, wires]);
+  }, [onCopyNodes, onPasteNodes, onDeleteNodes, onUndo, onDeselect, onSetSelectedNodeIds, onSetSelectedWireIds, nodes, wires]);
 
   // Prevent text selection globally while wiring
   useEffect(() => {
@@ -370,7 +392,12 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
       >
       {/* Draw wires */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
-        <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+        <svg
+          width="100%"
+          height="100%"
+          data-layout-version={wireLayoutVersion}
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+        >
           {wires.map(wire => {
             const fromNode = nodes.find(n => n.id === wire.fromNodeId)
             const toNode = nodes.find(n => n.id === wire.toNodeId)

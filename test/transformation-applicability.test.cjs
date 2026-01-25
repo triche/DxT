@@ -1,11 +1,6 @@
 // Transformation applicability tests
 console.log('=== Transformation Applicability Tests ===\n');
 
-process.env.TS_NODE_COMPILER_OPTIONS = JSON.stringify({ module: 'CommonJS' });
-require('ts-node/register/transpile-only');
-
-const { getApplicableTransformations } = require('../src/utils/transformation.ts');
-
 function runTest(testName, testFn) {
     try {
         const result = testFn();
@@ -100,28 +95,59 @@ const transformations = [
     }
 ];
 
-console.log('🔁 Applicability Matching:');
+const run = async () => {
+    const { getApplicableTransformations } = await import('../src/utils/transformation.ts');
 
-test('Transformation matches external ports of selection', () => {
-    const selection = ['filter-1', 'normalize-1'];
-    const applicable = getApplicableTransformations(nodes, wires, selection, transformations);
-    assertTrue(applicable.some(t => t.name === 'Filter + Normalize -> OptimizedFilter'), 'Expected applicable transform');
-    assertTrue(!applicable.some(t => t.name === 'Mismatched Output'), 'Did not expect mismatched output transform');
-});
+    console.log('🔁 Applicability Matching:');
 
-test('Internal wires are ignored when computing external ports', () => {
-    const selection = ['filter-1', 'normalize-1'];
-    const applicable = getApplicableTransformations(nodes, wires, selection, transformations);
-    assertTrue(!applicable.some(t => t.name === 'Double Input Needed'), 'Internal port should not count as external');
-});
+    test('Transformation matches external ports of selection', () => {
+        const selection = ['filter-1', 'normalize-1'];
+        const applicable = getApplicableTransformations(nodes, wires, selection, transformations);
+        assertTrue(applicable.some(t => t.name === 'Filter + Normalize -> OptimizedFilter'), 'Expected applicable transform');
+        assertTrue(!applicable.some(t => t.name === 'Mismatched Output'), 'Did not expect mismatched output transform');
+    });
 
-test('Unconnected ports are treated as external', () => {
-    const selection = ['lonely-1'];
-    const applicable = getApplicableTransformations(nodes, wires, selection, transformations);
-    assertTrue(applicable.some(t => t.name === 'Filter + Normalize -> OptimizedFilter'), 'Unconnected ports should still match');
-});
+    test('Internal wires are ignored when computing external ports', () => {
+        const selection = ['filter-1', 'normalize-1'];
+        const applicable = getApplicableTransformations(nodes, wires, selection, transformations);
+        assertTrue(!applicable.some(t => t.name === 'Double Input Needed'), 'Internal port should not count as external');
+    });
 
-console.log(`\n=== Test Summary: ${passed}/${total} passed ===`);
-if (passed !== total) {
+    test('Unconnected ports are treated as external', () => {
+        const selection = ['lonely-1'];
+        const applicable = getApplicableTransformations(nodes, wires, selection, transformations);
+        assertTrue(applicable.some(t => t.name === 'Filter + Normalize -> OptimizedFilter'), 'Unconnected ports should still match');
+    });
+
+    test('Duplicate port names are matched as a multiset', () => {
+        const localNodes = [
+            { id: 'src-a', type: 'Source', x: 50, y: 50, properties: { name: 'Source', inputs: [], outputs: ['out'] } },
+            { id: 'src-b', type: 'Source', x: 50, y: 120, properties: { name: 'Source', inputs: [], outputs: ['out'] } },
+            { id: 'proc-a', type: 'Proc', x: 220, y: 50, properties: { name: 'Proc', inputs: ['in'], outputs: ['out'] } },
+            { id: 'proc-b', type: 'Proc', x: 220, y: 120, properties: { name: 'Proc', inputs: ['in'], outputs: ['out'] } },
+            { id: 'sink', type: 'Sink', x: 420, y: 85, properties: { name: 'Sink', inputs: ['in'], outputs: [] } }
+        ];
+        const localWires = [
+            { id: 'w1', fromNodeId: 'src-a', fromPortIdx: 0, toNodeId: 'proc-a', toPortIdx: 0 },
+            { id: 'w2', fromNodeId: 'src-b', fromPortIdx: 0, toNodeId: 'proc-b', toPortIdx: 0 },
+            { id: 'w3', fromNodeId: 'proc-a', fromPortIdx: 0, toNodeId: 'sink', toPortIdx: 0 },
+            { id: 'w4', fromNodeId: 'proc-b', fromPortIdx: 0, toNodeId: 'sink', toPortIdx: 0 }
+        ];
+        const localTransforms = [
+            { name: 'Two In, One Out', inputPattern: ['in', 'in'], outputPattern: ['out', 'out'], replacementNodes: [] }
+        ];
+        const selection = ['proc-a', 'proc-b'];
+        const applicable = getApplicableTransformations(localNodes, localWires, selection, localTransforms);
+        assertTrue(applicable.length === 1, 'Expected multiset match for duplicate ports');
+    });
+
+    console.log(`\n=== Test Summary: ${passed}/${total} passed ===`);
+    if (passed !== total) {
+        process.exitCode = 1;
+    }
+};
+
+run().catch((error) => {
+    console.error(error);
     process.exitCode = 1;
-}
+});

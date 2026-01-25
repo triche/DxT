@@ -17,6 +17,7 @@ Key capabilities include:
 - Node creation and positioning via drag-and-drop.
 - Interactive wiring with live draft previews and connection rules.
 - Single and multi-selection, lasso selection, copy/paste, and delete.
+- Undo of diagram edits (drop, wire, delete, layout) with a 20-action buffer.
 - Palette management (create, save, load custom node types).
 - Diagram persistence to JSON with schema validation on load.
 - Property editing with immediate updates and batch editing support.
@@ -162,7 +163,15 @@ This design ensures that nodes placed during transformation application or manua
   When nodes are deleted, any wires connected to them are also removed.
   Wires can be deleted independently without affecting nodes.
 
-### 3.7 Context Menu
+### 3.7 Undo
+
+- **Undo** (Ctrl/Cmd+Z): Reverts the last diagram change, with a rolling
+  buffer of the most recent 20 actions.
+- Undo applies to node drops, wiring changes, deletions, and layout
+  (position) changes.
+- Selection changes are not recorded as undoable actions.
+
+### 3.8 Context Menu
 
 - Right-click on a node or wire to open a context menu. If multiple nodes or
   wires are selected, the menu applies to the entire selection.
@@ -174,7 +183,7 @@ This design ensures that nodes placed during transformation application or manua
 - Right-click on a transformation card in the Transformation Library to
   open a context menu with Delete.
 
-### 3.8 Palette Management
+### 3.9 Palette Management
 
 - Built-in node types: **Source** (outputs only) and **Sink** (inputs
   only).
@@ -186,7 +195,7 @@ This design ensures that nodes placed during transformation application or manua
 - Uses the File System Access API when available; otherwise falls back to
   file input and download links.
 
-### 3.9 Diagram Persistence
+### 3.10 Diagram Persistence
 
 - **Save Diagram**: Exports `name`, `nodes`, `customNodeDefs`, and `wires`
   as JSON. The filename is sanitized to remove unsafe characters.
@@ -194,7 +203,7 @@ This design ensures that nodes placed during transformation application or manua
   updates application state. Invalid files are rejected with a formatted
   error list.
 
-### 3.10 Transformation Management
+### 3.11 Transformation Management
 
 - **Transformation Library**: A right-side panel listing loaded
   transformations. Cards show name, input ports, and output ports.

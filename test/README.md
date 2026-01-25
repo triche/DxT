@@ -5,7 +5,7 @@ This comprehensive test suite validates all major functionality of the DxT dataf
 
 ## Test Files
 
-### 1. `validation-test.mjs`
+### 1. validation-test.cjs
 **Purpose:** Tests the JSON schema validation system
 **Coverage:**
 - Valid diagram validation
@@ -14,7 +14,7 @@ This comprehensive test suite validates all major functionality of the DxT dataf
 - Invalid palette detection
 - Error message formatting
 
-### 2. `app-functionality.test.js`
+### 2. app-functionality.test.cjs
 **Purpose:** Tests core application functionality
 **Coverage:**
 - **Node Management** (4 tests)
@@ -65,7 +65,7 @@ This comprehensive test suite validates all major functionality of the DxT dataf
   - Valid data loading
   - Invalid data rejection
 
-### 3. `transformation-applicability.test.mjs`
+### 3. transformation-applicability.test.cjs
 **Purpose:** Tests transformation applicability logic
 **Coverage:**
 - Applicable transformation detection
@@ -73,7 +73,7 @@ This comprehensive test suite validates all major functionality of the DxT dataf
 - Unconnected ports treated as external
 - Duplicate port name matching
 
-### 4. `transformation-apply.test.mjs`
+### 4. transformation-apply.test.cjs
 **Purpose:** Tests transformation application and export logic
 **Coverage:**
 - Unwired port export rules
@@ -81,7 +81,7 @@ This comprehensive test suite validates all major functionality of the DxT dataf
 - Duplicate port handling
 - Extra replacement ports remain unconnected
 
-### 5. `run-tests.cjs`
+### 5. run-tests.cjs
 **Purpose:** Test runner script that executes all test suites
 **Features:**
 - Sequential test execution
@@ -108,10 +108,10 @@ npm run test:app
 ### Direct Execution
 ```bash
 # From project root
-node --loader ts-node/esm test/validation-test.mjs
 node test/app-functionality.test.cjs
-node --loader ts-node/esm test/transformation-applicability.test.mjs
-node --loader ts-node/esm test/transformation-apply.test.mjs
+node test/validation-test.cjs
+node test/transformation-applicability.test.cjs
+node test/transformation-apply.test.cjs
 node test/run-tests.cjs
 ```
 
