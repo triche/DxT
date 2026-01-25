@@ -639,8 +639,10 @@ function App() {
 
     currentWires.forEach(wire => {
       if (!adjacency[wire.fromNodeId] || indegree[wire.toNodeId] === undefined) return
-      adjacency[wire.fromNodeId].push(wire.toNodeId)
-      indegree[wire.toNodeId] += 1
+      if (!adjacency[wire.fromNodeId].includes(wire.toNodeId)) {
+        adjacency[wire.fromNodeId].push(wire.toNodeId)
+        indegree[wire.toNodeId] += 1
+      }
     })
 
     const queue: string[] = []
