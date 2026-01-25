@@ -688,10 +688,15 @@ function App() {
       })
     }
 
+    // Fallback: handle any unprocessed nodes (typically caused by cycles in the diagram)
+    // Nodes with no incoming wires that reach this point indicate circular dependencies,
+    // since truly isolated nodes should have been processed in the initial BFS above.
     currentNodes.forEach(node => {
       if (processed.has(node.id)) return
       const incoming = currentWires.filter(w => w.toNodeId === node.id)
       if (incoming.length === 0) {
+        // This case suggests a cycle: node has no incoming wires but wasn't processed
+        console.warn(`Circular dependency detected in diagram: node "${node.type}" (${node.id}) appears to be part of a cycle`)
         depthByNode[node.id] = leftSet.size > 0 ? 1 : 0
       } else {
         const incomingDepth = Math.max(...incoming.map(w => depthByNode[w.fromNodeId] ?? 0))
