@@ -192,7 +192,7 @@ export const applyTransformationToSelection = (
   const nextWireId = () => `wire-${Date.now()}-${wireCounter++}`
   const newWires: WireType[] = [...remainingWires]
 
-  // Recreate internal wires with remapped IDs
+  // Add internal wires to the result with remapped IDs
   internalWires.forEach(wire => {
     const newFromId = idMap[wire.fromNodeId]
     const newToId = idMap[wire.toNodeId]
