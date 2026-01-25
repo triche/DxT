@@ -99,8 +99,8 @@ function App() {
   }, [wires])
 
   const cloneSnapshot = (snapshotNodes: NodeType[], snapshotWires: WireType[]): DiagramSnapshot => ({
-    nodes: snapshotNodes.map(n => ({ ...n, properties: { ...n.properties } })),
-    wires: snapshotWires.map(w => ({ ...w }))
+    nodes: JSON.parse(JSON.stringify(snapshotNodes)) as NodeType[],
+    wires: JSON.parse(JSON.stringify(snapshotWires)) as WireType[]
   })
 
   const pushUndoSnapshot = (snapshot: DiagramSnapshot) => {
