@@ -113,6 +113,8 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
 
   const handleMouseDown = (e: React.MouseEvent, node: NodeType) => {
     e.stopPropagation()
+    // Prevent starting a new drag if one is already in progress
+    if (draggingId !== null) return
     if (!canvasRef.current) return
     const canvasRect = canvasRef.current.getBoundingClientRect()
     onMoveNodeStart(node.id)
