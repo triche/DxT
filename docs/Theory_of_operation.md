@@ -64,7 +64,7 @@ imported diagrams and palettes conform to expected structures.
 State is managed via React `useState` and coordinated in `App`:
 
 - `nodes`, `wires`, `customNodeDefs`
-- `selectedNodeIds`, `wireDraft`, `clipboard`
+- `selectedNodeIds`, `selectedWireIds`, `wireDraft`, `clipboard`
 - `diagramName`, `contextMenu`
 - `transformations`, `transformationContextMenu`,
   `showSaveTransformationModal`, `pendingTransformation`
@@ -96,15 +96,17 @@ Wire rendering is done via SVG polylines, positioned behind nodes and ports for 
 
 ### 3.2 Selection Model
 
-- **Single select**: Click a node to select it.
-- **Multi-select**: Shift+click to add nodes to the selection.
+- **Single select**: Click a node or wire to select it.
+- **Multi-select**: Shift+click to add nodes or wires to the selection.
 - **Lasso select**: Click and drag on empty canvas to draw a selection
-  rectangle. Nodes whose DOM bounds intersect the lasso are selected.
+  rectangle. Nodes whose DOM bounds intersect the lasso are selected. Wires
+  whose bounding box intersects the lasso are also selected.
 - **Deselect**: Click empty canvas or press Escape.
-- **Select all**: Ctrl/Cmd+A selects all nodes.
+- **Select all**: Ctrl/Cmd+A selects all nodes and wires.
 
 Selected nodes receive a blue highlight, glow, and dashed outline when
-multi-selected.
+multi-selected. Selected wires appear in blue with increased thickness (3px
+vs 2px) to indicate selection state.
 
 ### 3.3 Wiring
 
@@ -115,6 +117,10 @@ multi-selected.
 - Only one wire may connect to a given input port; outputs can connect to
   multiple inputs.
 - If wiring is canceled (mouse up on empty canvas), the draft is discarded.
+- Wires can be selected by clicking on them, added to multi-selections with
+  Shift+click, or included in lasso selections.
+- Selected wires appear blue and thicker (3px vs 2px) for visual feedback.
+- Wires can be deleted via the Delete key, Backspace, or context menu.
 
 ### 3.4 Canvas Scrolling and Coordinate System
 
@@ -152,14 +158,18 @@ This design ensures that nodes placed during transformation application or manua
 - **Paste** (Ctrl/Cmd+V): Creates new nodes with new IDs and an offset, so
   they don’t overlap. Wires between copied nodes are duplicated and remapped
   to new IDs.
-- **Delete** (Delete/Backspace): Removes selected nodes and any wires
-  attached to them.
+- **Delete** (Delete/Backspace): Removes selected nodes and selected wires.
+  When nodes are deleted, any wires connected to them are also removed.
+  Wires can be deleted independently without affecting nodes.
 
 ### 3.7 Context Menu
 
-- Right-click on a node to open a context menu. If multiple nodes are
-  selected, the menu applies to the selection.
-- Actions: Delete and Apply Transformation (with applicable transformations).
+- Right-click on a node or wire to open a context menu. If multiple nodes or
+  wires are selected, the menu applies to the entire selection.
+- Actions: Delete (for both nodes and wires) and Apply Transformation (for
+  nodes only, with applicable transformations shown).
+- Mixed selections of nodes and wires are supported; the context menu shows
+  appropriate options based on the selection.
 
 - Right-click on a transformation card in the Transformation Library to
   open a context menu with Delete.

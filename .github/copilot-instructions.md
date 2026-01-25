@@ -40,6 +40,9 @@ transformation library with load/apply/save capabilities.
 - **Draft Wires:** Dotted line preview while dragging connections
 - **Connection Rules:** One wire per input port, unlimited outputs
 - **Auto-cleanup:** Wires removed when connected nodes are deleted
+- **Wire Selection:** Wires are selectable via click, shift-click, and lasso
+- **Visual Feedback:** Selected wires appear blue and thicker (3px vs 2px)
+- **Wire Deletion:** Wires can be deleted independently via Delete/Backspace or context menu
 
 ### Canvas Scrolling & Coordinate System
 - **Dynamic Bounds:** Canvas automatically calculates content bounds based on all node positions
@@ -51,18 +54,19 @@ transformation library with load/apply/save capabilities.
 - **Coordinate Translation:** All drag, drop, and wire operations account for canvas offset
 
 ### Selection & Editing
-- **Multi-select:** Shift+click, lasso selection, or Ctrl/Cmd+A for select all
+- **Multi-select:** Shift+click, lasso selection, or Ctrl/Cmd+A for select all (nodes and wires)
 - **Copy/Paste:** Ctrl/Cmd+C to copy, Ctrl/Cmd+V to paste (includes connected wires)
-- **Delete:** Delete key, Backspace, or context menu to remove selected nodes
+- **Delete:** Delete key, Backspace, or context menu to remove selected nodes and wires
 - **Property Editing:** Sliding panel appears when single node selected
 - **Immediate Updates:** Real-time property changes reflected in canvas
 - **Batch Editing:** Multi-select shows combined properties where applicable
+- **Mixed Selection:** Nodes and wires can be selected together and deleted in one operation
 
 ### Keyboard Shortcuts
 - **Copy:** Ctrl/Cmd+C - Copy selected nodes
 - **Paste:** Ctrl/Cmd+V - Paste nodes with offset positioning
-- **Delete:** Delete/Backspace - Remove selected nodes and connected wires
-- **Select All:** Ctrl/Cmd+A - Select all nodes on canvas
+- **Delete:** Delete/Backspace - Remove selected nodes and wires
+- **Select All:** Ctrl/Cmd+A - Select all nodes and wires on canvas
 - **Deselect:** Escape - Clear all selections
 - **Prevent Conflicts:** Shortcuts disabled when editing text inputs
 
