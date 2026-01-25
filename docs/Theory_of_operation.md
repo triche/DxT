@@ -222,7 +222,7 @@ This design ensures that nodes placed during transformation application or manua
 
 - **Transformation Library**: A right-side panel listing loaded
   transformations. Cards show name, input ports, and output ports.
-- **Add Transformation**: Loads a transformation JSON file and validates it
+- **Load Transformation**: Loads a transformation JSON file and validates it
   against the transformation schema.
 - **Save Transformation**: Exports the current diagram as a transformation.
   Unwired input ports become `inputPattern`; unwired output ports become
