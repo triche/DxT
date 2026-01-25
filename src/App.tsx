@@ -224,11 +224,6 @@ function App() {
   // Complete a wire to an input port
   const handleCompleteWire = (toNodeId: string, toPortIdx: number) => {
     if (!wireDraft) return
-    // Only allow one wire per input port
-    if (wires.some(w => w.toNodeId === toNodeId && w.toPortIdx === toPortIdx)) {
-      setWireDraft(null)
-      return
-    }
     pushUndoSnapshot(cloneSnapshot(nodesRef.current, wiresRef.current))
     setWires(wires => [
       ...wires,

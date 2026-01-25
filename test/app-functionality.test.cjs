@@ -118,20 +118,21 @@ test('Create valid wire connection', () => {
     assertEqual(wire.toPortIdx, 0);
 });
 
-test('Wire validation - no duplicate input connections', () => {
+test('Multiple wires can connect to the same input port', () => {
     const existingWires = [
         createMockWire('wire1', 'source1', 0, 'sink1', 0)
     ];
     
-    // Attempt to create duplicate connection to same input port
+    // Create another connection to the same input port
     const newWire = createMockWire('wire2', 'source2', 0, 'sink1', 0);
     
-    // Check if input port is already connected
-    const isInputOccupied = existingWires.some(w => 
-        w.toNodeId === newWire.toNodeId && w.toPortIdx === newWire.toPortIdx
+    // Both wires should be able to connect to the same input port
+    const allWires = [...existingWires, newWire];
+    const wiresToSameInput = allWires.filter(w => 
+        w.toNodeId === 'sink1' && w.toPortIdx === 0
     );
     
-    assertTrue(isInputOccupied, 'Should detect duplicate input connection');
+    assertEqual(wiresToSameInput.length, 2, 'Should allow multiple wires to the same input port');
 });
 
 test('Wire removal affects connected nodes', () => {

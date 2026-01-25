@@ -38,7 +38,7 @@ transformation library with load/apply/save capabilities.
 - **Visual Ports:** Output ports on right edge, input ports on left edge of nodes
 - **Wire Rendering:** Right-angled polylines with SVG-based wire layer that expands with canvas
 - **Draft Wires:** Dotted line preview while dragging connections
-- **Connection Rules:** One wire per input port, unlimited outputs
+- **Connection Rules:** Multiple wires per input port, unlimited outputs
 - **Auto-cleanup:** Wires removed when connected nodes are deleted
 - **Wire Selection:** Wires are selectable via click, shift-click, and lasso
 - **Visual Feedback:** Selected wires appear blue and thicker (3px vs 2px)

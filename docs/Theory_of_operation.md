@@ -115,7 +115,7 @@ vs 2px) to indicate selection state.
 - A draft wire follows the cursor and renders as a dotted right-angled
   polyline.
 - Complete a wire by releasing over an input port (green lollipop).
-- Only one wire may connect to a given input port; outputs can connect to
+- Multiple wires may connect to a given input port; outputs can also connect to
   multiple inputs.
 - If wiring is canceled (mouse up on empty canvas), the draft is discarded.
 - Wires can be selected by clicking on them, added to multi-selections with
