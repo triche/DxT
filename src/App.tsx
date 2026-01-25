@@ -4,6 +4,7 @@ import Canvas from './components/Canvas'
 import PropertyEditor from './components/PropertyEditor'
 import { validateDiagram, validateTransformation, formatValidationErrors } from './utils/validation'
 import { applyTransformationToSelection, buildTransformationFromDiagram, getApplicableTransformations, getPortList } from './utils/transformation'
+import { ESTIMATED_NODE_WIDTH, PORT_HEIGHT, BASE_NODE_HEIGHT } from './utils/constants'
 import './App.css'
 import './index.css'
 
@@ -51,6 +52,16 @@ const builtInNodeDefs: NodeTypeDef[] = [
 ]
 
 const areStringArraysEqual = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i])
+
+const CLEANUP_COLUMN_GAP = 48
+const CLEANUP_ROW_GAP = 16
+const CLEANUP_PADDING = 24
+
+const estimateNodeHeight = (node: NodeType) => {
+  const inputs = getPortList(node.properties, 'inputs')
+  const outputs = getPortList(node.properties, 'outputs')
+  return Math.max(inputs.length, outputs.length) * PORT_HEIGHT + BASE_NODE_HEIGHT
+}
 
 function App() {
   const brandingBarHeight = 56
@@ -583,6 +594,157 @@ function App() {
     setSelectedNodeIds([])
   }
 
+  const handleDiagramCleanup = () => {
+    const currentNodes = nodesRef.current
+    const currentWires = wiresRef.current
+    if (currentNodes.length === 0) return
+
+    pushUndoSnapshot(cloneSnapshot(currentNodes, currentWires))
+
+    const hasUnwiredInput = (node: NodeType) => {
+      const inputs = getPortList(node.properties, 'inputs')
+      if (inputs.length === 0) return false
+      return inputs.some((_, idx) => !currentWires.some(w => w.toNodeId === node.id && w.toPortIdx === idx))
+    }
+
+    const hasUnwiredOutput = (node: NodeType) => {
+      const outputs = getPortList(node.properties, 'outputs')
+      if (outputs.length === 0) return false
+      return outputs.some((_, idx) => !currentWires.some(w => w.fromNodeId === node.id && w.fromPortIdx === idx))
+    }
+
+    const nodesWithoutInputs = currentNodes.filter(n => getPortList(n.properties, 'inputs').length === 0)
+    const nodesWithoutOutputs = currentNodes.filter(n => getPortList(n.properties, 'outputs').length === 0)
+
+    const leftCandidates = nodesWithoutInputs.length > 0
+      ? nodesWithoutInputs
+      : currentNodes.filter(hasUnwiredInput)
+    const rightCandidates = nodesWithoutOutputs.length > 0
+      ? nodesWithoutOutputs
+      : currentNodes.filter(hasUnwiredOutput)
+
+    const leftSet = new Set(leftCandidates.map(n => n.id))
+    const rightSet = new Set(rightCandidates.map(n => n.id).filter(id => !leftSet.has(id)))
+
+    const adjacency: Record<string, string[]> = {}
+    const indegree: Record<string, number> = {}
+    const depthByNode: Record<string, number> = {}
+    currentNodes.forEach(node => {
+      adjacency[node.id] = []
+      indegree[node.id] = 0
+      depthByNode[node.id] = 0
+    })
+
+    currentWires.forEach(wire => {
+      if (!adjacency[wire.fromNodeId] || indegree[wire.toNodeId] === undefined) return
+      if (!adjacency[wire.fromNodeId].includes(wire.toNodeId)) {
+        adjacency[wire.fromNodeId].push(wire.toNodeId)
+        indegree[wire.toNodeId] += 1
+      }
+    })
+
+    const queue: string[] = []
+    const queued = new Set<string>()
+
+    if (leftSet.size > 0) {
+      leftSet.forEach(id => {
+        if (!queued.has(id)) {
+          depthByNode[id] = 0
+          queue.push(id)
+          queued.add(id)
+        }
+      })
+      currentNodes.forEach(node => {
+        if (indegree[node.id] === 0 && !leftSet.has(node.id) && !queued.has(node.id)) {
+          depthByNode[node.id] = 1
+          queue.push(node.id)
+          queued.add(node.id)
+        }
+      })
+    } else {
+      currentNodes.forEach(node => {
+        if (indegree[node.id] === 0 && !queued.has(node.id)) {
+          depthByNode[node.id] = 0
+          queue.push(node.id)
+          queued.add(node.id)
+        }
+      })
+    }
+
+    const processed = new Set<string>()
+    while (queue.length > 0) {
+      const nodeId = queue.shift()!
+      processed.add(nodeId)
+      const baseDepth = depthByNode[nodeId] ?? 0
+      adjacency[nodeId].forEach(nextId => {
+        depthByNode[nextId] = Math.max(depthByNode[nextId] ?? 0, baseDepth + 1)
+        indegree[nextId] -= 1
+        if (indegree[nextId] === 0 && !queued.has(nextId)) {
+          queue.push(nextId)
+          queued.add(nextId)
+        }
+      })
+    }
+
+    // Fallback: handle any unprocessed nodes (typically caused by cycles in the diagram)
+    // Nodes with no incoming wires that reach this point indicate circular dependencies,
+    // since truly isolated nodes should have been processed in the initial BFS above.
+    currentNodes.forEach(node => {
+      if (processed.has(node.id)) return
+      const incoming = currentWires.filter(w => w.toNodeId === node.id)
+      if (incoming.length === 0) {
+        // This case suggests a cycle: node has no incoming wires but wasn't processed
+        console.warn(`Circular dependency detected in diagram: node "${node.type}" (${node.id}) appears to be part of a cycle`)
+        depthByNode[node.id] = leftSet.size > 0 ? 1 : 0
+      } else {
+        const incomingDepth = Math.max(...incoming.map(w => depthByNode[w.fromNodeId] ?? 0))
+        depthByNode[node.id] = incomingDepth + 1
+      }
+    })
+
+    let maxDepth = Math.max(0, ...Object.values(depthByNode))
+    if (rightSet.size > 0) {
+      maxDepth += 1
+      rightSet.forEach(id => {
+        depthByNode[id] = maxDepth
+      })
+    }
+
+    const depthKeys = Array.from(new Set(Object.values(depthByNode))).sort((a, b) => a - b)
+    const depthMap = new Map<number, number>()
+    depthKeys.forEach((depth, index) => depthMap.set(depth, index))
+    Object.keys(depthByNode).forEach(id => {
+      depthByNode[id] = depthMap.get(depthByNode[id]) ?? depthByNode[id]
+    })
+
+    const columns: Record<number, NodeType[]> = {}
+    currentNodes.forEach(node => {
+      const depth = depthByNode[node.id] ?? 0
+      if (!columns[depth]) columns[depth] = []
+      columns[depth].push(node)
+    })
+
+    const sortedColumnKeys = Object.keys(columns).map(Number).sort((a, b) => a - b)
+    const newPositions: Record<string, { x: number; y: number }> = {}
+
+    sortedColumnKeys.forEach(depth => {
+      const columnNodes = columns[depth].slice().sort((a, b) => a.y - b.y)
+      let currentY = CLEANUP_PADDING
+      columnNodes.forEach(node => {
+        newPositions[node.id] = {
+          x: CLEANUP_PADDING + depth * (ESTIMATED_NODE_WIDTH + CLEANUP_COLUMN_GAP),
+          y: currentY,
+        }
+        currentY += estimateNodeHeight(node) + CLEANUP_ROW_GAP
+      })
+    })
+
+    setNodes(nodes => nodes.map(node => {
+      const pos = newPositions[node.id]
+      return pos ? { ...node, x: pos.x, y: pos.y } : node
+    }))
+  }
+
   const applicableTransformations = contextMenu
     ? getApplicableTransformations(nodes, wires, contextMenu.nodeIds, transformations)
     : []
@@ -604,7 +766,8 @@ function App() {
         <button onClick={handleSave} style={{ marginRight: 8 }}>Save</button>
         <button onClick={handleLoad} style={{ marginRight: 8 }}>Load</button>
         <button onClick={handleSaveTransformation} style={{ marginRight: 8 }}>Save Transformation</button>
-        <button onClick={handleClear}>Clear Diagram</button>
+        <button onClick={handleClear} style={{ marginRight: 8 }}>Clear Diagram</button>
+        <button onClick={handleDiagramCleanup}>Diagram Cleanup</button>
       </div>
       <Palette
         customNodeDefs={customNodeDefs}
@@ -679,7 +842,7 @@ function App() {
               </div>
             ))}
           </div>
-          <button onClick={handleAddTransformation} style={{ marginTop: 10, width: '100%' }}>Add Transformation</button>
+          <button onClick={handleAddTransformation} style={{ marginTop: 10, width: '100%' }}>Load Transformation</button>
         </div>
         <div style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
           {selectedNodeIds.length !== 1 && (

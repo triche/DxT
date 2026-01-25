@@ -16,7 +16,9 @@ external port patterns.
 - Clipboard: copy, paste (with wire preservation), delete nodes and wires.
 - Property editing with immediate updates.
 - Diagram save/load (JSON) and palette save/load.
+- Diagram cleanup for automatic left-to-right layout.
 - Transformation library (load, save, delete) and apply from context menu.
+- Load Transformation button in the library to import transformation JSON files.
 
 ## Installation
 
@@ -93,6 +95,11 @@ npm test
     add it to the Transformation Library.
 12. **Apply transformation**: Right-click a node selection and choose
     Apply Transformation from the context menu.
+13. **Diagram cleanup**: Use Diagram Cleanup in the top bar to rearrange
+   nodes into a clear left-to-right flow.
+14. **Load transformation**: Use the Load Transformation button in the
+   Transformation Library to import transformation JSON files into the
+   library.
 
 ### Keyboard Shortcuts
 
