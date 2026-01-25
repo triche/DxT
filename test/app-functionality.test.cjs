@@ -159,6 +159,13 @@ test('Delete selection removes nodes and wires together', () => {
     assertTrue(pattern.test(content), 'Expected delete to remove selected nodes and selected wires in one action');
 });
 
+test('Select all includes wires', () => {
+    const canvasPath = path.resolve(__dirname, '../src/components/Canvas.tsx');
+    const content = fs.readFileSync(canvasPath, 'utf8');
+    const pattern = /key\.toLowerCase\(\)\s*===\s*'a'[\s\S]*onSetSelectedNodeIds\([\s\S]*nodes\.map\(n\s*=>\s*n\.id\)\)[\s\S]*onSetSelectedWireIds\([\s\S]*wires\.map\(w\s*=>\s*w\.id\)\)/;
+    assertTrue(pattern.test(content), 'Expected Ctrl/Cmd+A to select nodes and wires');
+});
+
 test('Wire click does not start lasso selection', () => {
     const canvasPath = path.resolve(__dirname, '../src/components/Canvas.tsx');
     const content = fs.readFileSync(canvasPath, 'utf8');

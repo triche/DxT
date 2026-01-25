@@ -305,13 +305,14 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
         onDeselect();
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
         e.preventDefault();
-        // Select all nodes on the canvas
+        // Select all nodes and wires on the canvas
         onSetSelectedNodeIds(nodes.map(n => n.id));
+        onSetSelectedWireIds(wires.map(w => w.id));
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onCopyNodes, onPasteNodes, onDeleteNodes, onDeselect, onSetSelectedNodeIds, nodes]);
+  }, [onCopyNodes, onPasteNodes, onDeleteNodes, onDeselect, onSetSelectedNodeIds, onSetSelectedWireIds, nodes, wires]);
 
   // Prevent text selection globally while wiring
   useEffect(() => {
