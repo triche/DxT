@@ -154,17 +154,35 @@ export const applyTransformationToSelection = (
   const remainingNodes = nodes.filter(n => !selectedSet.has(n.id))
   const remainingWires = wires.filter(w => !selectedSet.has(w.fromNodeId) && !selectedSet.has(w.toNodeId))
 
+  // Build sets of ports that are used by internal wires
+  const internalWires = transformation.internalWires || []
+  const usedInputPorts = new Set<string>()
+  const usedOutputPorts = new Set<string>()
+  
+  internalWires.forEach(wire => {
+    const newFromId = idMap[wire.fromNodeId]
+    const newToId = idMap[wire.toNodeId]
+    if (newFromId && newToId) {
+      usedOutputPorts.add(`${newFromId}-${wire.fromPortIdx}`)
+      usedInputPorts.add(`${newToId}-${wire.toPortIdx}`)
+    }
+  })
+
   const inputPortMap: Record<string, Array<{ nodeId: string; portIdx: number }>> = {}
   const outputPortMap: Record<string, Array<{ nodeId: string; portIdx: number }>> = {}
 
   remappedReplacementNodes.forEach(node => {
     const inputs = getPortList(node.properties, 'inputs')
     inputs.forEach((name, idx) => {
+      // Skip ports that are already used by internal wires
+      if (usedInputPorts.has(`${node.id}-${idx}`)) return
       if (!inputPortMap[name]) inputPortMap[name] = []
       inputPortMap[name].push({ nodeId: node.id, portIdx: idx })
     })
     const outputs = getPortList(node.properties, 'outputs')
     outputs.forEach((name, idx) => {
+      // Skip ports that are already used by internal wires
+      if (usedOutputPorts.has(`${node.id}-${idx}`)) return
       if (!outputPortMap[name]) outputPortMap[name] = []
       outputPortMap[name].push({ nodeId: node.id, portIdx: idx })
     })
@@ -175,7 +193,6 @@ export const applyTransformationToSelection = (
   const newWires: WireType[] = [...remainingWires]
 
   // Recreate internal wires with remapped IDs
-  const internalWires = transformation.internalWires || []
   internalWires.forEach(wire => {
     const newFromId = idMap[wire.fromNodeId]
     const newToId = idMap[wire.toNodeId]
