@@ -19,12 +19,16 @@ type CanvasProps = {
     end: { x: number; y: number }
   } | null
   selectedNodeIds: string[]
+  selectedWireIds: string[]
   onSelectNode: (id: string, multi?: boolean) => void
-  onSetSelectedNodeIds: (ids: string[]) => void // NEW
+  onSelectWire: (id: string, multi?: boolean) => void
+  onSetSelectedNodeIds: (ids: string[]) => void
+  onSetSelectedWireIds: (ids: string[]) => void
   onDeselect: () => void
   onDropNode: (type: string, x: number, y: number) => void
   onMoveNode: (id: string, x: number, y: number) => void
   onNodeContextMenu: (e: React.MouseEvent, nodeId: string) => void
+  onWireContextMenu: (e: React.MouseEvent, wireId: string) => void
   onStartWire: (fromNodeId: string, fromPortIdx: number, start: { x: number; y: number }) => void
   onWireDraftMove: (end: { x: number; y: number }) => void
   onCompleteWire: (toNodeId: string, toPortIdx: number) => void
@@ -49,7 +53,7 @@ const PORT_HEIGHT = 28;
 const BASE_NODE_HEIGHT = 60;
 const CANVAS_PADDING = 100;
 
-const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetSelectedNodeIds, onDeselect, onDropNode, onMoveNode, onNodeContextMenu, onStartWire, onWireDraftMove, onCompleteWire, onCancelWire, onCopyNodes, onPasteNodes, onDeleteNodes }: CanvasProps) => {
+const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onSelectNode, onSelectWire, onSetSelectedNodeIds, onSetSelectedWireIds, onDeselect, onDropNode, onMoveNode, onNodeContextMenu, onWireContextMenu, onStartWire, onWireDraftMove, onCompleteWire, onCancelWire, onCopyNodes, onPasteNodes, onDeleteNodes }: CanvasProps) => {
   const canvasRef = useRef<HTMLDivElement>(null)
 
   // Drop handler for new nodes
@@ -138,6 +142,8 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
   const inputPortRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
   // Store refs for all node divs
   const nodeDivRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
+  // Store refs for all wire paths
+  const wirePathRefs = React.useRef<Record<string, SVGPolylineElement | null>>({})
 
   // Helper to get the DOM position of a port relative to the canvas, accounting for scroll and palette offset
   function getPortCenter(portEl: HTMLDivElement, canvasEl: HTMLDivElement) {
@@ -171,8 +177,9 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
   // Lasso selection state
   const [lasso, setLasso] = React.useState<null | { start: { x: number; y: number }; end: { x: number; y: number } }>(null)
   const lassoActive = React.useRef(false)
-  // Track the last set of lasso-selected node IDs
-  const lassoSelectedIds = React.useRef<string[]>([])
+  // Track the last set of lasso-selected node and wire IDs
+  const lassoSelectedNodeIds = React.useRef<string[]>([])
+  const lassoSelectedWireIds = React.useRef<string[]>([])
 
   // Track if a lasso just completed to prevent accidental deselect
   const lassoJustCompleted = React.useRef(false)
@@ -206,7 +213,7 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
       const ly1 = Math.min(lasso.start.y, newEnd.y)
       const ly2 = Math.max(lasso.start.y, newEnd.y)
       // Find nodes whose DOM bounding box (relative to canvas) intersects lasso
-      const selected = nodes.filter(node => {
+      const selectedNodes = nodes.filter(node => {
         const nodeDiv = nodeDivRefs.current[node.id]
         if (!nodeDiv || !canvasRef.current) return false
         const nodeRect = nodeDiv.getBoundingClientRect()
@@ -218,8 +225,25 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
         const ny2 = nodeRect.bottom - canvasRect.top
         return nx1 < lx2 && nx2 > lx1 && ny1 < ly2 && ny2 > ly1
       }).map(n => n.id)
-      lassoSelectedIds.current = selected
-      onSetSelectedNodeIds(selected)
+      
+      // Find wires whose path intersects lasso
+      const selectedWires = wires.filter(wire => {
+        const wirePath = wirePathRefs.current[wire.id]
+        if (!wirePath || !canvasRef.current) return false
+        const wireRect = wirePath.getBoundingClientRect()
+        const canvasRect = canvasRef.current.getBoundingClientRect()
+        // Wire bounding box relative to canvas
+        const wx1 = wireRect.left - canvasRect.left
+        const wx2 = wireRect.right - canvasRect.left
+        const wy1 = wireRect.top - canvasRect.top
+        const wy2 = wireRect.bottom - canvasRect.top
+        return wx1 < lx2 && wx2 > lx1 && wy1 < ly2 && wy2 > ly1
+      }).map(w => w.id)
+      
+      lassoSelectedNodeIds.current = selectedNodes
+      lassoSelectedWireIds.current = selectedWires
+      onSetSelectedNodeIds(selectedNodes)
+      onSetSelectedWireIds(selectedWires)
     }
     // Existing wire draft move
     handleCanvasMouseMove(e)
@@ -229,7 +253,8 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
   const handleCanvasLassoUp = () => {
     if (lassoActive.current && lasso && canvasRef.current) {
       lassoActive.current = false
-      onSetSelectedNodeIds(lassoSelectedIds.current)
+      onSetSelectedNodeIds(lassoSelectedNodeIds.current)
+      onSetSelectedWireIds(lassoSelectedWireIds.current)
       setLasso(null)
       lassoJustCompleted.current = true
     }
@@ -329,14 +354,35 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, onSelectNode, onSetS
             const to = getPortCenter(toPort, canvasRef.current)
             // Right-angled polyline
             const midX = (from.x + to.x) / 2
+            const isSelected = selectedWireIds.includes(wire.id)
             return (
-              <polyline
-                key={wire.id}
-                points={`${from.x},${from.y} ${midX},${from.y} ${midX},${to.y} ${to.x},${to.y}`}
-                fill="none"
-                stroke="#181818"
-                strokeWidth={2}
-              />
+              <g key={wire.id}>
+                {/* Invisible thicker line for easier clicking */}
+                <polyline
+                  points={`${from.x},${from.y} ${midX},${from.y} ${midX},${to.y} ${to.x},${to.y}`}
+                  fill="none"
+                  stroke="transparent"
+                  strokeWidth={12}
+                  style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onSelectWire(wire.id, e.shiftKey)
+                  }}
+                  onContextMenu={(e) => {
+                    e.stopPropagation()
+                    onWireContextMenu(e, wire.id)
+                  }}
+                />
+                {/* Visible wire line */}
+                <polyline
+                  ref={el => { wirePathRefs.current[wire.id] = el }}
+                  points={`${from.x},${from.y} ${midX},${from.y} ${midX},${to.y} ${to.x},${to.y}`}
+                  fill="none"
+                  stroke={isSelected ? '#4a90e2' : '#181818'}
+                  strokeWidth={isSelected ? 3 : 2}
+                  style={{ pointerEvents: 'none' }}
+                />
+              </g>
             )
           })}
           {/* Draft wire as dotted line */}

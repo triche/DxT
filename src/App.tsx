@@ -54,6 +54,7 @@ function App() {
 
   const [nodes, setNodes] = useState<NodeType[]>([])
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([])
+  const [selectedWireIds, setSelectedWireIds] = useState<string[]>([])
 
   const [customNodeDefs, setCustomNodeDefs] = useState<NodeTypeDef[]>([])
   const [transformations, setTransformations] = useState<TransformationType[]>([])
@@ -62,7 +63,7 @@ function App() {
   const [pendingTransformation, setPendingTransformation] = useState<TransformationType | null>(null)
   const [showTransformationErrorModal, setShowTransformationErrorModal] = useState(false)
   const [transformationErrorMessage, setTransformationErrorMessage] = useState<string>('')
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeIds: string[] } | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeIds: string[]; wireIds: string[] } | null>(null)
   const [transformationContextMenu, setTransformationContextMenu] = useState<{ x: number; y: number; index: number } | null>(null)
   const [wires, setWires] = useState<WireType[]>([])
   const [wireDraft, setWireDraft] = useState<{
@@ -108,8 +109,31 @@ function App() {
   // Handler to set selected node IDs directly (for lasso selection)
   const handleSetSelectedNodeIds = (ids: string[]) => setSelectedNodeIds(ids)
 
+  // Handler for selecting wires (single or multi)
+  const handleSelectWire = (id: string, multi: boolean = false) => {
+    // Clear node selection when selecting wires
+    setSelectedNodeIds([])
+    if (multi) {
+      setSelectedWireIds(ids => ids.includes(id) ? ids : [...ids, id])
+    } else {
+      setSelectedWireIds([id])
+    }
+  }
+
+  // Handler to set selected wire IDs directly (for lasso selection)
+  const handleSetSelectedWireIds = (ids: string[]) => {
+    setSelectedWireIds(ids)
+    // Clear node selection when selecting wires
+    if (ids.length > 0) {
+      setSelectedNodeIds([])
+    }
+  }
+
   // Handler for canvas click to clear selection
-  const handleCanvasDeselect = () => setSelectedNodeIds([])
+  const handleCanvasDeselect = () => {
+    setSelectedNodeIds([])
+    setSelectedWireIds([])
+  }
 
   // Handler for updating node properties
   const handleUpdateNode = (id: string, properties: Record<string, unknown>) => {
@@ -355,8 +379,18 @@ function App() {
     e.preventDefault()
     const nodeIds = selectedNodeIds.includes(nodeId) ? selectedNodeIds : [nodeId]
     setSelectedNodeIds(nodeIds)
-    setContextMenu({ x: e.clientX, y: e.clientY, nodeIds })
+    setSelectedWireIds([]) // Clear wire selection
+    setContextMenu({ x: e.clientX, y: e.clientY, nodeIds, wireIds: [] })
   }
+
+  const handleWireContextMenu = (e: React.MouseEvent, wireId: string) => {
+    e.preventDefault()
+    const wireIds = selectedWireIds.includes(wireId) ? selectedWireIds : [wireId]
+    setSelectedWireIds(wireIds)
+    setSelectedNodeIds([]) // Clear node selection
+    setContextMenu({ x: e.clientX, y: e.clientY, nodeIds: [], wireIds })
+  }
+
   const handleCloseContextMenu = () => setContextMenu(null)
   const handleCloseTransformationContextMenu = () => setTransformationContextMenu(null)
 
@@ -422,6 +456,22 @@ function App() {
     setSelectedNodeIds([]);
   };
 
+  // Delete selected wires
+  const handleDeleteWires = () => {
+    if (selectedWireIds.length === 0) return;
+    setWires(wires => wires.filter(w => !selectedWireIds.includes(w.id)));
+    setSelectedWireIds([]);
+  };
+
+  // Delete whatever is currently selected (nodes or wires)
+  const handleDelete = () => {
+    if (selectedNodeIds.length > 0) {
+      handleDeleteNodes();
+    } else if (selectedWireIds.length > 0) {
+      handleDeleteWires();
+    }
+  };
+
   // Clear canvas
   const handleClear = () => {
     setNodes([])
@@ -462,19 +512,23 @@ function App() {
           wires={wires}
           wireDraft={wireDraft}
           selectedNodeIds={selectedNodeIds}
+          selectedWireIds={selectedWireIds}
           onSelectNode={handleSelectNode}
+          onSelectWire={handleSelectWire}
           onSetSelectedNodeIds={handleSetSelectedNodeIds}
+          onSetSelectedWireIds={handleSetSelectedWireIds}
           onDeselect={handleCanvasDeselect}
           onDropNode={handleDropNode}
           onMoveNode={handleMoveNode}
           onNodeContextMenu={handleNodeContextMenu}
+          onWireContextMenu={handleWireContextMenu}
           onStartWire={handleStartWire}
           onWireDraftMove={handleWireDraftMove}
           onCompleteWire={handleCompleteWire}
           onCancelWire={handleCancelWire}
           onCopyNodes={handleCopyNodes}
           onPasteNodes={handlePasteNodes}
-          onDeleteNodes={handleDeleteNodes}
+          onDeleteNodes={handleDelete}
         />
       </div>
       {/* Right Sidebar */}
@@ -549,20 +603,24 @@ function App() {
       {/* Context Menu */}
       {contextMenu && (
         <div style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, background: '#fff', border: '1px solid #ccc', zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }} onMouseLeave={handleCloseContextMenu}>
-          <div style={{ padding: 8, cursor: 'pointer', color: 'red' }} onClick={() => { handleDeleteNodes(); handleCloseContextMenu(); }}>Delete</div>
-          <div style={{ padding: 8, borderTop: '1px solid #eee', fontWeight: 600 }}>Apply Transformation</div>
-          {applicableTransformations.length === 0 ? (
-            <div style={{ padding: 8, color: '#888' }}>No applicable transformations</div>
-          ) : (
-            applicableTransformations.map((t, idx) => (
-              <div
-                key={`${t.name}-${idx}`}
-                style={{ padding: 8, cursor: 'pointer' }}
-                onClick={() => handleApplyTransformation(t, contextMenu.nodeIds)}
-              >
-                {t.name}
-              </div>
-            ))
+          <div style={{ padding: 8, cursor: 'pointer', color: 'red' }} onClick={() => { handleDelete(); handleCloseContextMenu(); }}>Delete</div>
+          {contextMenu.nodeIds.length > 0 && (
+            <>
+              <div style={{ padding: 8, borderTop: '1px solid #eee', fontWeight: 600 }}>Apply Transformation</div>
+              {applicableTransformations.length === 0 ? (
+                <div style={{ padding: 8, color: '#888' }}>No applicable transformations</div>
+              ) : (
+                applicableTransformations.map((t, idx) => (
+                  <div
+                    key={`${t.name}-${idx}`}
+                    style={{ padding: 8, cursor: 'pointer' }}
+                    onClick={() => handleApplyTransformation(t, contextMenu.nodeIds)}
+                  >
+                    {t.name}
+                  </div>
+                ))
+              )}
+            </>
           )}
         </div>
       )}
