@@ -229,6 +229,15 @@ test('Lasso requires drag threshold before selecting', () => {
     assertTrue(pendingPattern.test(content), 'Expected lasso to activate only after drag threshold');
 });
 
+test('Undo-triggered wire redraw uses post-layout rerender', () => {
+    const canvasPath = path.resolve(__dirname, '../src/components/Canvas.tsx');
+    const content = fs.readFileSync(canvasPath, 'utf8');
+    const layoutEffectPattern = /useLayoutEffect\([\s\S]*requestAnimationFrame\([\s\S]*setWireLayoutVersion/;
+    const dataAttrPattern = /data-layout-version=\{wireLayoutVersion\}/;
+    assertTrue(layoutEffectPattern.test(content), 'Expected layout effect to trigger wire rerender after layout');
+    assertTrue(dataAttrPattern.test(content), 'Expected wire layout version to be used in SVG');
+});
+
 // === CUSTOM NODE DEFINITIONS TESTS ===
 console.log('\n🏗️  Custom Node Definition Tests:');
 

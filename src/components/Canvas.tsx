@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useLayoutEffect } from 'react';
 import type { NodeType } from '../App'
 
 type WireType = {
@@ -79,6 +79,7 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
   // Drag state
   const [draggingId, setDraggingId] = React.useState<string | null>(null)
   const [offset, setOffset] = React.useState<{x: number, y: number}>({x: 0, y: 0})
+  const [wireLayoutVersion, setWireLayoutVersion] = React.useState(0)
 
   // Calculate the canvas content bounds based on node positions
   const canvasContentBounds = React.useMemo(() => {
@@ -144,6 +145,15 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
       window.removeEventListener('mouseup', handleMouseUp)
     }
   }, [draggingId, offset, onMoveNode, onMoveNodeEnd, canvasContentBounds.offsetX, canvasContentBounds.offsetY])
+
+  // Re-render wires after layout updates (e.g., undoing a move)
+  useLayoutEffect(() => {
+    if (!canvasRef.current) return
+    const handle = window.requestAnimationFrame(() => {
+      setWireLayoutVersion(v => v + 1)
+    })
+    return () => window.cancelAnimationFrame(handle)
+  }, [nodes, wires, canvasContentBounds.offsetX, canvasContentBounds.offsetY])
 
   // Store refs for all ports by node id and port index
   const outputPortRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
@@ -380,7 +390,12 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
       >
       {/* Draw wires */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
-        <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+        <svg
+          width="100%"
+          height="100%"
+          data-layout-version={wireLayoutVersion}
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+        >
           {wires.map(wire => {
             const fromNode = nodes.find(n => n.id === wire.fromNodeId)
             const toNode = nodes.find(n => n.id === wire.toNodeId)
