@@ -131,3 +131,4 @@ Transformation Library and transformation application.
 - Use proper React patterns with hooks and functional components.
 - Implement comprehensive keyboard and mouse interaction support.
 - Favor minimal, targeted edits that preserve current UX behavior.
+- Always check if updates are needed to README.md, .github/copilot-instructions.md, and docs/Theory_of_operation.md based on new functionality or files added
