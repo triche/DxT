@@ -57,6 +57,7 @@ transformation library with load/apply/save capabilities.
 - **Multi-select:** Shift+click, lasso selection, or Ctrl/Cmd+A for select all (nodes and wires)
 - **Copy/Paste:** Ctrl/Cmd+C to copy, Ctrl/Cmd+V to paste (includes connected wires)
 - **Delete:** Delete key, Backspace, or context menu to remove selected nodes and wires
+- **Undo:** Ctrl/Cmd+Z undoes diagram edits (20-action buffer; selection changes excluded)
 - **Property Editing:** Sliding panel appears when single node selected
 - **Immediate Updates:** Real-time property changes reflected in canvas
 - **Batch Editing:** Multi-select shows combined properties where applicable

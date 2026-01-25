@@ -166,6 +166,13 @@ test('Select all includes wires', () => {
     assertTrue(pattern.test(content), 'Expected Ctrl/Cmd+A to select nodes and wires');
 });
 
+test('Ctrl/Cmd+Z triggers undo', () => {
+    const canvasPath = path.resolve(__dirname, '../src/components/Canvas.tsx');
+    const content = fs.readFileSync(canvasPath, 'utf8');
+    const pattern = /key\.toLowerCase\(\)\s*===\s*'z'[\s\S]*onUndo\(\)/;
+    assertTrue(pattern.test(content), 'Expected Ctrl/Cmd+Z to call undo');
+});
+
 test('Wire click does not start lasso selection', () => {
     const canvasPath = path.resolve(__dirname, '../src/components/Canvas.tsx');
     const content = fs.readFileSync(canvasPath, 'utf8');
@@ -189,12 +196,27 @@ test('Context menu preserves mixed selection when clicking selected item', () =>
     assertTrue(wirePattern.test(content), 'Expected wire context menu to preserve node selection when wire already selected');
 });
 
+test('Undo history is recorded for delete, drop, wire, and move', () => {
+    const appPath = path.resolve(__dirname, '../src/App.tsx');
+    const content = fs.readFileSync(appPath, 'utf8');
+    const dropPattern = /handleDropNode[\s\S]*pushUndoSnapshot/;
+    const deletePattern = /handleDelete[\s\S]*pushUndoSnapshot/;
+    const wirePattern = /handleCompleteWire[\s\S]*pushUndoSnapshot/;
+    const movePattern = /handleMoveNodeStart[\s\S]*dragSnapshotRef\.current[\s\S]*handleMoveNodeEnd[\s\S]*pushUndoSnapshot/;
+    assertTrue(dropPattern.test(content), 'Expected drop to record undo history');
+    assertTrue(deletePattern.test(content), 'Expected delete to record undo history');
+    assertTrue(wirePattern.test(content), 'Expected wiring to record undo history');
+    assertTrue(movePattern.test(content), 'Expected move to record undo history');
+});
+
 test('Context menus close on outside click', () => {
     const appPath = path.resolve(__dirname, '../src/App.tsx');
     const content = fs.readFileSync(appPath, 'utf8');
-    const effectPattern = /useEffect\([\s\S]*window\.addEventListener\('mousedown',[\s\S]*setContextMenu\(null\)[\s\S]*setTransformationContextMenu\(null\)/;
+    const handlerPattern = /const\s+handlePointerDown[\s\S]*setContextMenu\(null\)[\s\S]*setTransformationContextMenu\(null\)/;
+    const listenerPattern = /window\.addEventListener\('mousedown',\s*handlePointerDown\)/;
     const refPattern = /ref=\{contextMenuRef\}[\s\S]*ref=\{transformationContextMenuRef\}/;
-    assertTrue(effectPattern.test(content), 'Expected outside-click handler for context menus');
+    assertTrue(handlerPattern.test(content), 'Expected outside-click handler for context menus');
+    assertTrue(listenerPattern.test(content), 'Expected outside-click listener registration');
     assertTrue(refPattern.test(content), 'Expected refs on context menu elements');
 });
 

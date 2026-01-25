@@ -74,15 +74,16 @@ npm test
    wires, or use lasso selection. Selected wires appear blue and thicker.
 6. **Delete nodes/wires**: Select elements and press Delete/Backspace, or
    right-click and choose Delete from the context menu.
-7. **Edit properties**: Select a single node to open the sliding property
+7. **Undo**: Press Ctrl/Cmd+Z to undo the last diagram change (up to 20 actions).
+8. **Edit properties**: Select a single node to open the sliding property
    editor on the right.
-8. **Save/Load**: Use the top bar to save or load diagrams as JSON.
-9. **Palette management**: Create custom node types, then save/load palette
+9. **Save/Load**: Use the top bar to save or load diagrams as JSON.
+10. **Palette management**: Create custom node types, then save/load palette
    JSON from the palette panel.
-10. **Save transformation**: Use Save Transformation to export the current
+11. **Save transformation**: Use Save Transformation to export the current
     diagram into a transformation JSON (based on unwired ports). Choose to
     add it to the Transformation Library.
-11. **Apply transformation**: Right-click a node selection and choose
+12. **Apply transformation**: Right-click a node selection and choose
     Apply Transformation from the context menu.
 
 ### Keyboard Shortcuts
@@ -90,6 +91,7 @@ npm test
 - Copy: Ctrl/Cmd+C (copies selected nodes)
 - Paste: Ctrl/Cmd+V (pastes nodes with offset)
 - Delete: Delete/Backspace (removes selected nodes and wires)
+- Undo: Ctrl/Cmd+Z (undoes last diagram change; 20-step buffer)
 - Select all: Ctrl/Cmd+A (selects all nodes and wires)
 - Deselect: Escape (clears all selections)
 
@@ -119,10 +121,10 @@ DxT/
 │   ├── App.tsx             # Main application component
 │   └── main.tsx            # Application entry point
 ├── test/                   # Test suite
-│   ├── validation-test.mjs
+│   ├── validation-test.cjs
 │   ├── app-functionality.test.cjs
-│   ├── transformation-applicability.test.mjs
-│   ├── transformation-apply.test.mjs
+│   ├── transformation-applicability.test.cjs
+│   ├── transformation-apply.test.cjs
 │   └── run-tests.cjs
 ├── samples/                # Sample JSON files
 │   ├── diagram.json

@@ -40,6 +40,11 @@ export type TransformationType = {
   internalWires?: WireType[]
 }
 
+type DiagramSnapshot = {
+  nodes: NodeType[]
+  wires: WireType[]
+}
+
 const builtInNodeDefs: NodeTypeDef[] = [
   { name: 'Source', inputs: [], outputs: ['out'] },
   { name: 'Sink', inputs: ['in'], outputs: [] },
@@ -76,8 +81,47 @@ function App() {
   } | null>(null)
   const [diagramName, setDiagramName] = useState<string>('Untitled Diagram')
 
+  const nodesRef = useRef<NodeType[]>([])
+  const wiresRef = useRef<WireType[]>([])
+  const undoStackRef = useRef<DiagramSnapshot[]>([])
+  const dragSnapshotRef = useRef<DiagramSnapshot | null>(null)
+  const dragStartRef = useRef<{ id: string; x: number; y: number } | null>(null)
+
   // Clipboard for copy/paste
   const [clipboard, setClipboard] = useState<NodeType[] | null>(null)
+
+  useEffect(() => {
+    nodesRef.current = nodes
+  }, [nodes])
+
+  useEffect(() => {
+    wiresRef.current = wires
+  }, [wires])
+
+  const cloneSnapshot = (snapshotNodes: NodeType[], snapshotWires: WireType[]): DiagramSnapshot => ({
+    nodes: snapshotNodes.map(n => ({ ...n, properties: { ...n.properties } })),
+    wires: snapshotWires.map(w => ({ ...w }))
+  })
+
+  const pushUndoSnapshot = (snapshot: DiagramSnapshot) => {
+    const stack = undoStackRef.current
+    stack.push(snapshot)
+    if (stack.length > 20) {
+      stack.shift()
+    }
+  }
+
+  const handleUndo = () => {
+    const stack = undoStackRef.current
+    const snapshot = stack.pop()
+    if (!snapshot) return
+    setNodes(snapshot.nodes)
+    setWires(snapshot.wires)
+    setSelectedNodeIds([])
+    setSelectedWireIds([])
+    setContextMenu(null)
+    setWireDraft(null)
+  }
 
   // Handler to add a new custom node type
   const handleAddCustomNodeDef = (def: NodeTypeDef) => {
@@ -88,6 +132,7 @@ function App() {
   const handleDropNode = (type: string, x: number, y: number) => {
     // Look up node definition in built-in and custom node defs
     const def = [...builtInNodeDefs, ...customNodeDefs].find(d => d.name === type)
+    pushUndoSnapshot(cloneSnapshot(nodesRef.current, wiresRef.current))
     setNodes([...nodes, {
       id: `node-${Date.now()}`,
       type,
@@ -146,6 +191,26 @@ function App() {
     setNodes(nodes => nodes.map(n => n.id === id ? { ...n, x, y } : n))
   }
 
+  const handleMoveNodeStart = (id: string) => {
+    const node = nodesRef.current.find(n => n.id === id)
+    if (!node) return
+    dragStartRef.current = { id, x: node.x, y: node.y }
+    dragSnapshotRef.current = cloneSnapshot(nodesRef.current, wiresRef.current)
+  }
+
+  const handleMoveNodeEnd = (id: string) => {
+    const start = dragStartRef.current
+    const snapshot = dragSnapshotRef.current
+    dragStartRef.current = null
+    dragSnapshotRef.current = null
+    if (!start || !snapshot || start.id !== id) return
+    const node = nodesRef.current.find(n => n.id === id)
+    if (!node) return
+    if (node.x !== start.x || node.y !== start.y) {
+      pushUndoSnapshot(snapshot)
+    }
+  }
+
   // Start a wire from an output port
   const handleStartWire = (fromNodeId: string, fromPortIdx: number, start: { x: number; y: number }) => {
     setWireDraft({ fromNodeId, fromPortIdx, start, end: start })
@@ -164,6 +229,7 @@ function App() {
       setWireDraft(null)
       return
     }
+    pushUndoSnapshot(cloneSnapshot(nodesRef.current, wiresRef.current))
     setWires(wires => [
       ...wires,
       {
@@ -468,6 +534,7 @@ function App() {
   // Delete whatever is currently selected (nodes or wires)
   const handleDelete = () => {
     if (selectedNodeIds.length === 0 && selectedWireIds.length === 0) return
+    pushUndoSnapshot(cloneSnapshot(nodesRef.current, wiresRef.current))
     setNodes(nodes => nodes.filter(n => !selectedNodeIds.includes(n.id)))
     setWires(wires => wires.filter(w =>
       !selectedWireIds.includes(w.id) &&
@@ -526,6 +593,8 @@ function App() {
           onDeselect={handleCanvasDeselect}
           onDropNode={handleDropNode}
           onMoveNode={handleMoveNode}
+          onMoveNodeStart={handleMoveNodeStart}
+          onMoveNodeEnd={handleMoveNodeEnd}
           onNodeContextMenu={handleNodeContextMenu}
           onWireContextMenu={handleWireContextMenu}
           onStartWire={handleStartWire}
@@ -535,6 +604,7 @@ function App() {
           onCopyNodes={handleCopyNodes}
           onPasteNodes={handlePasteNodes}
           onDeleteNodes={handleDelete}
+          onUndo={handleUndo}
         />
       </div>
       {/* Right Sidebar */}
