@@ -77,7 +77,7 @@ wiring and for lasso selection based on node DOM bounds.
 
 The layout uses a fixed top bar and a three-column horizontal split with precise viewport sizing:
 
-- **Top bar**: Save, Load, Save Transformation, Clear, and diagram name input (fixed, 48px height).
+- **Top bar**: Save, Load, Save Transformation, Clear, Diagram Cleanup, and diagram name input (fixed, 48px height).
 - **Left pane**: Palette (20vw width, scrollable vertically).
 - **Center pane**: Canvas (60vw width, scrollable horizontally and vertically).
 - **Right pane**: Transformation Library and Property Editor (20vw width, relative positioned).
@@ -203,7 +203,22 @@ This design ensures that nodes placed during transformation application or manua
   updates application state. Invalid files are rejected with a formatted
   error list.
 
-### 3.11 Transformation Management
+### 3.11 Diagram Cleanup
+
+- **Purpose**: Automatically rearranges nodes to improve readability and
+  clarify wiring flow.
+- **Leftmost placement**: Nodes with no input ports are anchored to the left
+  of the visible diagram. If none exist, nodes with unwired input ports are
+  treated as the leftmost group.
+- **Rightmost placement**: Nodes with no output ports are moved to the right.
+  If none exist, nodes with unwired output ports are treated as the
+  rightmost group.
+- **Ordering**: Nodes with both inputs and outputs are ordered left-to-right
+  based on wiring direction. When there is insufficient visible width,
+  additional columns flow off the right side while keeping leftmost nodes in
+  view.
+
+### 3.12 Transformation Management
 
 - **Transformation Library**: A right-side panel listing loaded
   transformations. Cards show name, input ports, and output ports.

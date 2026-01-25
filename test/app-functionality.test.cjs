@@ -210,6 +210,20 @@ test('Undo history is recorded for delete, drop, wire, and move', () => {
     assertTrue(movePattern.test(content), 'Expected move to record undo history');
 });
 
+test('Diagram cleanup button exists on the top bar', () => {
+    const appPath = path.resolve(__dirname, '../src/App.tsx');
+    const content = fs.readFileSync(appPath, 'utf8');
+    const buttonPattern = /<button\s+onClick=\{handleDiagramCleanup\}>Diagram Cleanup<\/button>/;
+    assertTrue(buttonPattern.test(content), 'Expected Diagram Cleanup button to call handleDiagramCleanup');
+});
+
+test('Diagram cleanup records undo history', () => {
+    const appPath = path.resolve(__dirname, '../src/App.tsx');
+    const content = fs.readFileSync(appPath, 'utf8');
+    const cleanupPattern = /handleDiagramCleanup[\s\S]*pushUndoSnapshot/;
+    assertTrue(cleanupPattern.test(content), 'Expected cleanup to record undo history');
+});
+
 test('Context menus close on outside click', () => {
     const appPath = path.resolve(__dirname, '../src/App.tsx');
     const content = fs.readFileSync(appPath, 'utf8');
