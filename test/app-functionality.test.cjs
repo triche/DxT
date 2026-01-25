@@ -145,6 +145,68 @@ test('Wire removal affects connected nodes', () => {
     assertEqual(remainingWires.length, 0);
 });
 
+test('Shift-click wire selection adds without toggling off', () => {
+    const appPath = path.resolve(__dirname, '../src/App.tsx');
+    const content = fs.readFileSync(appPath, 'utf8');
+    const pattern = /handleSelectWire[\s\S]*setSelectedWireIds\(\s*ids\s*=>\s*ids\.includes\(id\)\s*\?\s*ids\s*:\s*\[\.\.\.ids,\s*id\]\s*\)/;
+    assertTrue(pattern.test(content), 'Expected shift-click to add wire without deselecting existing selection');
+});
+
+test('Delete selection removes nodes and wires together', () => {
+    const appPath = path.resolve(__dirname, '../src/App.tsx');
+    const content = fs.readFileSync(appPath, 'utf8');
+    const pattern = /handleDelete[\s\S]*setNodes\(nodes\s*=>\s*nodes\.filter\(n\s*=>\s*!selectedNodeIds\.includes\(n\.id\)\)\)[\s\S]*setWires\(wires\s*=>\s*wires\.filter\(w\s*=>[\s\S]*!selectedWireIds\.includes\(w\.id\)[\s\S]*!selectedNodeIds\.includes\(w\.fromNodeId\)[\s\S]*!selectedNodeIds\.includes\(w\.toNodeId\)/;
+    assertTrue(pattern.test(content), 'Expected delete to remove selected nodes and selected wires in one action');
+});
+
+test('Select all includes wires', () => {
+    const canvasPath = path.resolve(__dirname, '../src/components/Canvas.tsx');
+    const content = fs.readFileSync(canvasPath, 'utf8');
+    const pattern = /key\.toLowerCase\(\)\s*===\s*'a'[\s\S]*onSetSelectedNodeIds\([\s\S]*nodes\.map\(n\s*=>\s*n\.id\)\)[\s\S]*onSetSelectedWireIds\([\s\S]*wires\.map\(w\s*=>\s*w\.id\)\)/;
+    assertTrue(pattern.test(content), 'Expected Ctrl/Cmd+A to select nodes and wires');
+});
+
+test('Wire click does not start lasso selection', () => {
+    const canvasPath = path.resolve(__dirname, '../src/components/Canvas.tsx');
+    const content = fs.readFileSync(canvasPath, 'utf8');
+    const pattern = /<polyline[\s\S]*onMouseDown=\{e => \{[\s\S]*e\.stopPropagation\(\)[\s\S]*\}\}/;
+    assertTrue(pattern.test(content), 'Expected wire click target to stop propagation on mouse down');
+});
+
+test('Blank canvas clicks clear selection', () => {
+    const canvasPath = path.resolve(__dirname, '../src/components/Canvas.tsx');
+    const content = fs.readFileSync(canvasPath, 'utf8');
+    const pattern = /onClick=\{e => \{[\s\S]*!isEventOnNode\(e\.target\)[\s\S]*onDeselect\(\)/;
+    assertTrue(pattern.test(content), 'Expected blank-area clicks to deselect when not clicking a node');
+});
+
+test('Context menu preserves mixed selection when clicking selected item', () => {
+    const appPath = path.resolve(__dirname, '../src/App.tsx');
+    const content = fs.readFileSync(appPath, 'utf8');
+    const nodePattern = /handleNodeContextMenu[\s\S]*selectedNodeIds\.includes\(nodeId\)[\s\S]*\?\s*selectedNodeIds\s*:\s*\[nodeId\][\s\S]*selectedNodeIds\.includes\(nodeId\)\s*\?\s*selectedWireIds\s*:\s*\[\]/;
+    const wirePattern = /handleWireContextMenu[\s\S]*selectedWireIds\.includes\(wireId\)[\s\S]*\?\s*selectedWireIds\s*:\s*\[wireId\][\s\S]*selectedWireIds\.includes\(wireId\)\s*\?\s*selectedNodeIds\s*:\s*\[\]/;
+    assertTrue(nodePattern.test(content), 'Expected node context menu to preserve wire selection when node already selected');
+    assertTrue(wirePattern.test(content), 'Expected wire context menu to preserve node selection when wire already selected');
+});
+
+test('Context menus close on outside click', () => {
+    const appPath = path.resolve(__dirname, '../src/App.tsx');
+    const content = fs.readFileSync(appPath, 'utf8');
+    const effectPattern = /useEffect\([\s\S]*window\.addEventListener\('mousedown',[\s\S]*setContextMenu\(null\)[\s\S]*setTransformationContextMenu\(null\)/;
+    const refPattern = /ref=\{contextMenuRef\}[\s\S]*ref=\{transformationContextMenuRef\}/;
+    assertTrue(effectPattern.test(content), 'Expected outside-click handler for context menus');
+    assertTrue(refPattern.test(content), 'Expected refs on context menu elements');
+});
+
+test('Lasso requires drag threshold before selecting', () => {
+    const canvasPath = path.resolve(__dirname, '../src/components/Canvas.tsx');
+    const content = fs.readFileSync(canvasPath, 'utf8');
+    const thresholdPattern = /LASSO_DRAG_THRESHOLD\s*=\s*\d+/;
+    const pendingPattern = /lassoPending\.current\s*=\s*true[\s\S]*Math\.hypot\([\s\S]*\)\s*>=\s*LASSO_DRAG_THRESHOLD/;
+    assertTrue(thresholdPattern.test(content), 'Expected a lasso drag threshold constant');
+    assertTrue(pendingPattern.test(content), 'Expected lasso to activate only after drag threshold');
+});
+
 // === CUSTOM NODE DEFINITIONS TESTS ===
 console.log('\n🏗️  Custom Node Definition Tests:');
 

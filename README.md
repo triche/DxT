@@ -12,8 +12,8 @@ external port patterns.
 
 - Drag-and-drop node creation from a palette.
 - Interactive wiring with draft previews and connection rules.
-- Selection tools: click, shift-click, lasso, and select-all.
-- Clipboard: copy, paste (with wire preservation), delete.
+- Selection tools for nodes and wires: click, shift-click, lasso, and select-all.
+- Clipboard: copy, paste (with wire preservation), delete nodes and wires.
 - Property editing with immediate updates.
 - Diagram save/load (JSON) and palette save/load.
 - Transformation library (load, save, delete) and apply from context menu.
@@ -70,24 +70,28 @@ npm test
 3. **Move nodes**: Click and drag a node on the canvas.
 4. **Select nodes**: Click to select, Shift+click to multi-select, or drag
    on empty canvas to lasso-select.
-5. **Edit properties**: Select a single node to open the sliding property
+5. **Select wires**: Click on a wire to select it, Shift+click to multi-select
+   wires, or use lasso selection. Selected wires appear blue and thicker.
+6. **Delete nodes/wires**: Select elements and press Delete/Backspace, or
+   right-click and choose Delete from the context menu.
+7. **Edit properties**: Select a single node to open the sliding property
    editor on the right.
-6. **Save/Load**: Use the top bar to save or load diagrams as JSON.
-7. **Palette management**: Create custom node types, then save/load palette
+8. **Save/Load**: Use the top bar to save or load diagrams as JSON.
+9. **Palette management**: Create custom node types, then save/load palette
    JSON from the palette panel.
-8. **Save transformation**: Use Save Transformation to export the current
-   diagram into a transformation JSON (based on unwired ports). Choose to
-   add it to the Transformation Library.
-9. **Apply transformation**: Right-click a node selection and choose
-   Apply Transformation from the context menu.
+10. **Save transformation**: Use Save Transformation to export the current
+    diagram into a transformation JSON (based on unwired ports). Choose to
+    add it to the Transformation Library.
+11. **Apply transformation**: Right-click a node selection and choose
+    Apply Transformation from the context menu.
 
 ### Keyboard Shortcuts
 
-- Copy: Ctrl/Cmd+C
-- Paste: Ctrl/Cmd+V
-- Delete: Delete/Backspace
-- Select all: Ctrl/Cmd+A
-- Deselect: Escape
+- Copy: Ctrl/Cmd+C (copies selected nodes)
+- Paste: Ctrl/Cmd+V (pastes nodes with offset)
+- Delete: Delete/Backspace (removes selected nodes and wires)
+- Select all: Ctrl/Cmd+A (selects all nodes and wires)
+- Deselect: Escape (clears all selections)
 
 ## File Formats
 
