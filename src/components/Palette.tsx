@@ -4,9 +4,10 @@ import { validatePalette, formatValidationErrors } from '../utils/validation'
 type PaletteProps = {
   customNodeDefs: { name: string; inputs: string[]; outputs: string[] }[]
   onAddCustomNodeDef: (def: { name: string; inputs: string[]; outputs: string[] }) => void
+  topOffset: number
 }
 
-const Palette: React.FC<PaletteProps> = ({ customNodeDefs, onAddCustomNodeDef }) => {
+const Palette: React.FC<PaletteProps> = ({ customNodeDefs, onAddCustomNodeDef, topOffset }) => {
   const [showModal, setShowModal] = useState(false)
   const [nodeName, setNodeName] = useState('')
   const [inputPorts, setInputPorts] = useState('')
@@ -158,7 +159,7 @@ const Palette: React.FC<PaletteProps> = ({ customNodeDefs, onAddCustomNodeDef })
   };
 
   return (
-    <div style={{ width: '20vw', minWidth: 0, maxWidth: '20vw', background: '#f4f4f4', borderRight: '1px solid #ccc', padding: '12px 8px', boxSizing: 'border-box', height: '100vh', overflowY: 'auto', marginTop: 48 }}>
+    <div style={{ width: '20vw', minWidth: 0, maxWidth: '20vw', background: '#f4f4f4', borderRight: '1px solid #ccc', padding: '12px 8px', boxSizing: 'border-box', height: `calc(100vh - ${topOffset}px)`, overflowY: 'auto', marginTop: topOffset }}>
       <h3>Palette</h3>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 16 }}>
         <button onClick={handleNewNode}>New Node</button>

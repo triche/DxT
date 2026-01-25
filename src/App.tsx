@@ -48,6 +48,10 @@ const builtInNodeDefs: NodeTypeDef[] = [
 const areStringArraysEqual = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i])
 
 function App() {
+  const brandingBarHeight = 56
+  const controlBarHeight = 48
+  const topOffset = brandingBarHeight + controlBarHeight
+
   const [nodes, setNodes] = useState<NodeType[]>([])
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([])
 
@@ -430,7 +434,11 @@ function App() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', maxWidth: '100vw', overflowX: 'hidden', boxSizing: 'border-box' }}>
-      <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: 48, background: '#f5f5f5', borderBottom: '1px solid #ccc', zIndex: 20, display: 'flex', alignItems: 'center', paddingLeft: 16 }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: brandingBarHeight, background: '#0b1e3a', color: '#fff', borderBottom: '3px solid #16a34a', zIndex: 30, display: 'flex', alignItems: 'center', paddingLeft: 16, gap: 12 }}>
+        <img src="/DxT.png" alt="DxT logo" style={{ height: 36, width: 36, objectFit: 'contain' }} />
+        <div style={{ fontSize: 24, fontWeight: 600, letterSpacing: 0.3 }}>Design by Transformation</div>
+      </div>
+      <div style={{ position: 'fixed', top: brandingBarHeight, left: 0, width: '100vw', height: controlBarHeight, background: '#f5f5f5', borderBottom: '1px solid #ccc', zIndex: 25, display: 'flex', alignItems: 'center', paddingLeft: 16 }}>
         <input
           type="text"
           value={diagramName}
@@ -446,8 +454,9 @@ function App() {
       <Palette
         customNodeDefs={customNodeDefs}
         onAddCustomNodeDef={handleAddCustomNodeDef}
+        topOffset={topOffset}
       />
-      <div style={{ flex: '0 0 60vw', width: '60vw', minWidth: 0, display: 'flex', position: 'relative', height: 'calc(100vh - 48px)', marginTop: 48, boxSizing: 'border-box' }}>
+      <div style={{ flex: '0 0 60vw', width: '60vw', minWidth: 0, display: 'flex', position: 'relative', height: `calc(100vh - ${topOffset}px)`, marginTop: topOffset, boxSizing: 'border-box' }}>
         <Canvas
           nodes={nodes}
           wires={wires}
@@ -472,8 +481,8 @@ function App() {
       <div
         style={{
           position: 'relative',
-          marginTop: 48,
-          height: 'calc(100vh - 48px)',
+          marginTop: topOffset,
+          height: `calc(100vh - ${topOffset}px)`,
           width: '20vw',
           minWidth: 0,
           maxWidth: '20vw',
