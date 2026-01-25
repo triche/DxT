@@ -267,6 +267,104 @@ test('Apply transformation with multiple internal wires', () => {
   assertTrue(internalWires.length === 2, `Expected 2 internal wires, got ${internalWires.length}`);
 });
 
+console.log('\n🐛 Duplicate Port Name Tests:');
+
+test('Apply transformation prefers unwired output ports over internally-wired ones', () => {
+  // Scenario: We have Source -> Old -> Sink
+  // We replace Old with two nodes (NewA -> NewB) where:
+  // - NewA has output "out" (internally connected to NewB)
+  // - NewB has output "out" (unwired, should be used for external connection)
+  // The external connection to Sink should use NewB's "out" port, not NewA's
+  
+  const nodes = [
+    { id: 'src', type: 'Source', x: 50, y: 100, properties: { name: 'Source', inputs: [], outputs: ['out'] } },
+    { id: 'old', type: 'Old', x: 200, y: 100, properties: { name: 'Old', inputs: ['in'], outputs: ['out'] } },
+    { id: 'sink', type: 'Sink', x: 350, y: 100, properties: { name: 'Sink', inputs: ['in'], outputs: [] } }
+  ];
+  const wires = [
+    { id: 'w1', fromNodeId: 'src', fromPortIdx: 0, toNodeId: 'old', toPortIdx: 0 },
+    { id: 'w2', fromNodeId: 'old', fromPortIdx: 0, toNodeId: 'sink', toPortIdx: 0 }
+  ];
+  
+  // Transformation replaces Old with NewA -> NewB (both have output port named "out")
+  const transformation = {
+    name: 'Replace with two nodes',
+    inputPattern: ['in'],
+    outputPattern: ['out'],
+    replacementNodes: [
+      { id: 'r1', type: 'NewA', x: 200, y: 100, properties: { name: 'NewA', inputs: ['in'], outputs: ['out'] } },
+      { id: 'r2', type: 'NewB', x: 300, y: 100, properties: { name: 'NewB', inputs: ['in'], outputs: ['out'] } }
+    ],
+    internalWires: [
+      // r1's output "out" connects to r2's input "in" internally
+      { id: 'int-1', fromNodeId: 'r1', fromPortIdx: 0, toNodeId: 'r2', toPortIdx: 0 }
+    ]
+  };
+
+  const result = applyTransformationToSelection(nodes, wires, ['old'], transformation);
+  assertTrue(result !== null, 'Expected transformation to apply');
+  assertTrue(result.nodes.length === 4, 'Expected 4 nodes (src, 2 replacements, sink)');
+  
+  // Should have: 1 internal wire + 2 external wires (from src to r1, from r2 to sink)
+  assertTrue(result.wires.length === 3, `Expected 3 wires total, got ${result.wires.length}`);
+  
+  // Find the wire going to the sink
+  const wireToSink = result.wires.find(w => w.toNodeId === 'sink');
+  assertTrue(!!wireToSink, 'Expected to find wire to sink');
+  
+  // The wire to sink should come from r2 (NewB), not r1 (NewA)
+  // because r1's output port is already used by the internal wire
+  const r2 = result.replacementNodes.find(n => n.type === 'NewB');
+  assertTrue(!!r2, 'Expected to find NewB node');
+  assertEqual(wireToSink.fromNodeId, r2.id, 'Wire to sink should come from NewB (unwired port), not NewA (internally wired port)');
+});
+
+test('Apply transformation prefers unwired input ports over internally-wired ones', () => {
+  // Scenario: We have Source -> Old -> Sink
+  // We replace Old with two nodes (NewA -> NewB) where:
+  // - NewA has input "in" (unwired, should be used for external connection)
+  // - NewB has input "in" (internally connected from NewA)
+  // The external connection from Source should use NewA's "in" port, not NewB's
+  
+  const nodes = [
+    { id: 'src', type: 'Source', x: 50, y: 100, properties: { name: 'Source', inputs: [], outputs: ['out'] } },
+    { id: 'old', type: 'Old', x: 200, y: 100, properties: { name: 'Old', inputs: ['in'], outputs: ['out'] } },
+    { id: 'sink', type: 'Sink', x: 350, y: 100, properties: { name: 'Sink', inputs: ['in'], outputs: [] } }
+  ];
+  const wires = [
+    { id: 'w1', fromNodeId: 'src', fromPortIdx: 0, toNodeId: 'old', toPortIdx: 0 },
+    { id: 'w2', fromNodeId: 'old', fromPortIdx: 0, toNodeId: 'sink', toPortIdx: 0 }
+  ];
+  
+  // Transformation replaces Old with NewA -> NewB (both have input port named "in")
+  const transformation = {
+    name: 'Replace with two nodes',
+    inputPattern: ['in'],
+    outputPattern: ['out'],
+    replacementNodes: [
+      { id: 'r1', type: 'NewA', x: 200, y: 100, properties: { name: 'NewA', inputs: ['in'], outputs: ['out'] } },
+      { id: 'r2', type: 'NewB', x: 300, y: 100, properties: { name: 'NewB', inputs: ['in'], outputs: ['out'] } }
+    ],
+    internalWires: [
+      // r1's output "out" connects to r2's input "in" internally
+      { id: 'int-1', fromNodeId: 'r1', fromPortIdx: 0, toNodeId: 'r2', toPortIdx: 0 }
+    ]
+  };
+
+  const result = applyTransformationToSelection(nodes, wires, ['old'], transformation);
+  assertTrue(result !== null, 'Expected transformation to apply');
+  
+  // Find the wire coming from the source
+  const wireFromSource = result.wires.find(w => w.fromNodeId === 'src');
+  assertTrue(!!wireFromSource, 'Expected to find wire from source');
+  
+  // The wire from source should go to r1 (NewA), not r2 (NewB)
+  // because r2's input port is already used by the internal wire
+  const r1 = result.replacementNodes.find(n => n.type === 'NewA');
+  assertTrue(!!r1, 'Expected to find NewA node');
+  assertEqual(wireFromSource.toNodeId, r1.id, 'Wire from source should go to NewA (unwired port), not NewB (internally wired port)');
+});
+
 console.log(`\n=== Test Summary: ${passed}/${total} passed ===`);
 if (passed !== total) {
   process.exitCode = 1;

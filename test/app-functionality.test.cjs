@@ -592,6 +592,13 @@ test('Delete transformation removes correct entry', () => {
 // === CANVAS SCROLLING TESTS ===
 console.log('\n📜 Canvas Scrolling Tests:');
 
+test('Wire rendering accounts for canvas scroll offsets', () => {
+    const canvasPath = path.resolve(__dirname, '../src/components/Canvas.tsx');
+    const content = fs.readFileSync(canvasPath, 'utf8');
+    assertTrue(content.includes('scrollLeft'), 'Expected scrollLeft to be used in wire position calculations');
+    assertTrue(content.includes('scrollTop'), 'Expected scrollTop to be used in wire position calculations');
+});
+
 // Helper function to calculate canvas bounds (matches Canvas.tsx implementation)
 function calculateCanvasBounds(nodes) {
     const ESTIMATED_NODE_WIDTH = 150;

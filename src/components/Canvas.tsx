@@ -146,17 +146,16 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
   // Store refs for all wire paths
   const wirePathRefs = React.useRef<Record<string, SVGPolylineElement | null>>({})
 
-  // Helper to get the DOM position of a port relative to the canvas, accounting for scroll and palette offset
+  // Helper to get the DOM position of a port relative to the canvas content wrapper
   function getPortCenter(portEl: HTMLDivElement, canvasEl: HTMLDivElement) {
     const portRect = portEl.getBoundingClientRect();
     const canvasRect = canvasEl.getBoundingClientRect();
-    // Adjust for scroll position and palette offset
-    //const scrollLeft = canvasEl.scrollLeft;
-    //const scrollTop = canvasEl.scrollTop;
-    // Returns the center coordinates of a port relative to the canvas
+    const scrollLeft = canvasEl.scrollLeft;
+    const scrollTop = canvasEl.scrollTop;
+    // Returns the center coordinates of a port relative to the canvas content (including scroll)
     return {
-      x: portRect.left + portRect.width / 2 - canvasRect.left,
-      y: portRect.top + portRect.height / 2 - canvasRect.top,
+      x: portRect.left + portRect.width / 2 - canvasRect.left + scrollLeft,
+      y: portRect.top + portRect.height / 2 - canvasRect.top + scrollTop,
     };
   }
 
@@ -164,8 +163,8 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
   const handleCanvasMouseMove = (e: React.MouseEvent) => {
     if (wireDraft && canvasRef.current) {
       const canvasRect = canvasRef.current.getBoundingClientRect()
-      const x = e.clientX - canvasRect.left
-      const y = e.clientY - canvasRect.top
+      const x = e.clientX - canvasRect.left + canvasRef.current.scrollLeft
+      const y = e.clientY - canvasRect.top + canvasRef.current.scrollTop
       onWireDraftMove({ x, y })
     }
   }
