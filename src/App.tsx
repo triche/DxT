@@ -114,7 +114,7 @@ function App() {
     // Clear node selection when selecting wires
     setSelectedNodeIds([])
     if (multi) {
-      setSelectedWireIds(ids => ids.includes(id) ? ids : [...ids, id])
+      setSelectedWireIds(ids => ids.includes(id) ? ids.filter(existingId => existingId !== id) : [...ids, id])
     } else {
       setSelectedWireIds([id])
     }

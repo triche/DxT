@@ -52,6 +52,7 @@ const ESTIMATED_NODE_WIDTH = 150;
 const PORT_HEIGHT = 28;
 const BASE_NODE_HEIGHT = 60;
 const CANVAS_PADDING = 100;
+const WIRE_CLICK_TARGET_WIDTH = 12; // Width of invisible polyline for easier wire clicking
 
 const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onSelectNode, onSelectWire, onSetSelectedNodeIds, onSetSelectedWireIds, onDeselect, onDropNode, onMoveNode, onNodeContextMenu, onWireContextMenu, onStartWire, onWireDraftMove, onCompleteWire, onCancelWire, onCopyNodes, onPasteNodes, onDeleteNodes }: CanvasProps) => {
   const canvasRef = useRef<HTMLDivElement>(null)
@@ -362,7 +363,7 @@ const Canvas = ({ nodes, wires, wireDraft, selectedNodeIds, selectedWireIds, onS
                   points={`${from.x},${from.y} ${midX},${from.y} ${midX},${to.y} ${to.x},${to.y}`}
                   fill="none"
                   stroke="transparent"
-                  strokeWidth={12}
+                  strokeWidth={WIRE_CLICK_TARGET_WIDTH}
                   style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
                   onClick={(e) => {
                     e.stopPropagation()
