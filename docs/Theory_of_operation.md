@@ -17,7 +17,8 @@ Key capabilities include:
 - Node creation and positioning via drag-and-drop.
 - Interactive wiring with live draft previews and connection rules.
 - Single and multi-selection, lasso selection, copy/paste, and delete.
-- Undo of diagram edits (drop, wire, delete, layout) with a 20-action buffer.
+- Undo of diagram edits (drop, wire, delete, layout) with a 20-action
+  buffer.
 - Palette management (create, save, load custom node types).
 - Diagram persistence to JSON with schema validation on load.
 - Property editing with immediate updates and batch editing support.
@@ -38,9 +39,9 @@ Key capabilities include:
 - **Canvas**: Right panel where nodes and wires are rendered. Handles
   drag/drop placement, node movement, selection (click, shift-click,
   lasso), wiring interactions, and keyboard shortcuts.
-- **PropertyEditor**: Sliding right-side panel that updates node
-  properties immediately. Supports batch editing by showing consistent
-  values across selected nodes.
+- **PropertyEditor**: Sliding right-side panel that updates node properties
+  immediately. Supports batch editing by showing consistent values across
+  selected nodes.
 
 ### 2.2 Data Model
 
@@ -75,16 +76,25 @@ wiring and for lasso selection based on node DOM bounds.
 
 ### 2.4 Rendering and Layout
 
-The layout uses a fixed top bar and a three-column horizontal split with precise viewport sizing:
+The layout uses a fixed top bar and a three-column horizontal split with
+precise viewport sizing:
 
-- **Top bar**: Save, Load, Save Transformation, Clear, Diagram Cleanup, and diagram name input (fixed, 48px height).
+- **Top bar**: Save, Load, Save Transformation, Clear, Diagram Cleanup, and
+  diagram name input (fixed, 48px height).
 - **Left pane**: Palette (20vw width, scrollable vertically).
-- **Center pane**: Canvas (60vw width, scrollable horizontally and vertically).
-- **Right pane**: Transformation Library and Property Editor (20vw width, relative positioned).
+- **Center pane**: Canvas (60vw width, scrollable horizontally and
+  vertically).
+- **Right pane**: Transformation Library and Property Editor (20vw width,
+  relative positioned).
 
-The canvas implements dynamic content bounds calculation that accounts for nodes positioned anywhere in 2D space, including negative coordinates. This allows nodes to be placed outside the initial viewport, with automatic scrollbars enabling access to all content.
+The canvas implements dynamic content bounds calculation that accounts for
+nodes positioned anywhere in 2D space, including negative coordinates. This
+allows nodes to be placed outside the initial viewport, with automatic
+scrollbars enabling access to all content.
 
-Wire rendering is done via SVG polylines, positioned behind nodes and ports for clear visual hierarchy. The SVG layer expands to cover the full scrollable canvas area.
+Wire rendering is done via SVG polylines, positioned behind nodes and ports
+for clear visual hierarchy. The SVG layer expands to cover the full
+scrollable canvas area.
 
 ## 3) Feature Behavior and UX
 
@@ -115,8 +125,8 @@ vs 2px) to indicate selection state.
 - A draft wire follows the cursor and renders as a dotted right-angled
   polyline.
 - Complete a wire by releasing over an input port (green lollipop).
-- Multiple wires may connect to a given input port; outputs can also connect to
-  multiple inputs.
+- Multiple wires may connect to a given input port; outputs can also
+  connect to multiple inputs.
 - If wiring is canceled (mouse up on empty canvas), the draft is discarded.
 - Wires can be selected by clicking on them, added to multi-selections with
   Shift+click, or included in lasso selections.
@@ -125,26 +135,41 @@ vs 2px) to indicate selection state.
 
 ### 3.4 Canvas Scrolling and Coordinate System
 
-The canvas implements intelligent scrolling to handle nodes placed anywhere in 2D space:
+The canvas implements intelligent scrolling to handle nodes placed anywhere
+in 2D space:
 
-- **Dynamic Bounds Calculation**: The canvas automatically calculates content bounds based on all node positions, including nodes with negative coordinates.
-- **Offset System**: The canvas maintains offset values (`offsetX`, `offsetY`) that translate between viewport coordinates and node coordinates, allowing nodes to be positioned at any location including negative values.
-- **Automatic Scrollbars**: Horizontal and vertical scrollbars appear automatically when nodes extend beyond the visible viewport in any direction.
-- **Content Wrapper**: A positioned wrapper div expands dynamically to encompass all nodes plus padding (`CANVAS_PADDING = 100px`), ensuring the scrollable area always covers all content.
-- **Scroll Preservation**: Node positioning, drag operations, and wire rendering all account for the canvas offset, maintaining correct behavior regardless of scroll position.
+- **Dynamic Bounds Calculation**: The canvas automatically calculates
+  content bounds based on all node positions, including nodes with negative
+  coordinates.
+- **Offset System**: The canvas maintains offset values (`offsetX`,
+  `offsetY`) that translate between viewport coordinates and node
+  coordinates, allowing nodes to be positioned at any location including
+  negative values.
+- **Automatic Scrollbars**: Horizontal and vertical scrollbars appear
+  automatically when nodes extend beyond the visible viewport in any
+  direction.
+- **Content Wrapper**: A positioned wrapper div expands dynamically to
+  encompass all nodes plus padding (`CANVAS_PADDING = 100px`), ensuring the
+  scrollable area always covers all content.
+- **Scroll Preservation**: Node positioning, drag operations, and wire
+  rendering all account for the canvas offset, maintaining correct behavior
+  regardless of scroll position.
 
 Key implementation constants:
+
 - `ESTIMATED_NODE_WIDTH`: 150px (used for bounds calculation)
 - `PORT_HEIGHT`: 28px (vertical spacing per port)
 - `BASE_NODE_HEIGHT`: 60px (minimum node height)
 - `CANVAS_PADDING`: 100px (extra space around content bounds)
 
-This design ensures that nodes placed during transformation application or manual positioning remain accessible, even if they fall outside the initial viewport.
+This design ensures that nodes placed during transformation application or
+manual positioning remain accessible, even if they fall outside the initial
+viewport.
 
 ### 3.5 Property Editing
 
-- When exactly one node is selected, the property editor slides in from
-  the right. It displays:
+- When exactly one node is selected, the property editor slides in from the
+  right. It displays:
   - Node type (read-only)
   - Node name
   - Python file path
@@ -157,8 +182,8 @@ This design ensures that nodes placed during transformation application or manua
 
 - **Copy** (Ctrl/Cmd+C): Stores selected nodes in a local clipboard.
 - **Paste** (Ctrl/Cmd+V): Creates new nodes with new IDs and an offset, so
-  they don’t overlap. Wires between copied nodes are duplicated and remapped
-  to new IDs.
+  they don’t overlap. Wires between copied nodes are duplicated and
+  remapped to new IDs.
 - **Delete** (Delete/Backspace): Removes selected nodes and selected wires.
   When nodes are deleted, any wires connected to them are also removed.
   Wires can be deleted independently without affecting nodes.
@@ -173,8 +198,8 @@ This design ensures that nodes placed during transformation application or manua
 
 ### 3.8 Context Menu
 
-- Right-click on a node or wire to open a context menu. If multiple nodes or
-  wires are selected, the menu applies to the entire selection.
+- Right-click on a node or wire to open a context menu. If multiple nodes
+  or wires are selected, the menu applies to the entire selection.
 - Actions: Delete (for both nodes and wires) and Apply Transformation (for
   nodes only, with applicable transformations shown).
 - Mixed selections of nodes and wires are supported; the context menu shows
@@ -207,31 +232,31 @@ This design ensures that nodes placed during transformation application or manua
 
 - **Purpose**: Automatically rearranges nodes to improve readability and
   clarify wiring flow.
-- **Leftmost placement**: Nodes with no input ports are anchored to the left
-  of the visible diagram. If none exist, nodes with unwired input ports are
-  treated as the leftmost group.
-- **Rightmost placement**: Nodes with no output ports are moved to the right.
-  If none exist, nodes with unwired output ports are treated as the
+- **Leftmost placement**: Nodes with no input ports are anchored to the
+  left of the visible diagram. If none exist, nodes with unwired input
+  ports are treated as the leftmost group.
+- **Rightmost placement**: Nodes with no output ports are moved to the
+  right. If none exist, nodes with unwired output ports are treated as the
   rightmost group.
-- **Ordering**: Nodes with both inputs and outputs are ordered left-to-right
-  based on wiring direction. When there is insufficient visible width,
-  additional columns flow off the right side while keeping leftmost nodes in
-  view.
+- **Ordering**: Nodes with both inputs and outputs are ordered
+  left-to-right based on wiring direction. When there is insufficient
+  visible width, additional columns flow off the right side while keeping
+  leftmost nodes in view.
 
 ### 3.12 Transformation Management
 
 - **Transformation Library**: A right-side panel listing loaded
   transformations. Cards show name, input ports, and output ports.
-- **Load Transformation**: Loads a transformation JSON file and validates it
-  against the transformation schema.
+- **Load Transformation**: Loads a transformation JSON file and validates
+  it against the transformation schema.
 - **Save Transformation**: Exports the current diagram as a transformation.
   Unwired input ports become `inputPattern`; unwired output ports become
   `outputPattern`. The transformation name comes from the diagram name
   field. A modal asks whether to also add it to the library.
-- **Apply Transformation**: From the node context menu, only transformations
-  whose external port multiset matches the selection are shown. External
-  ports include unconnected ports or ports wired to nodes outside the
-  selection. Internal wires are ignored.
+- **Apply Transformation**: From the node context menu, only
+  transformations whose external port multiset matches the selection are
+  shown. External ports include unconnected ports or ports wired to nodes
+  outside the selection. Internal wires are ignored.
 - **Wiring on Apply**: Replacement nodes are offset to the selection’s top
   left. External wires are reconnected by matching port names; unmatched
   replacement ports remain unconnected.

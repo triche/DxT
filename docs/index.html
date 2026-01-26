@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -12,99 +12,164 @@
       <img class="page-logo" src="./DxT.png" alt="DxT logo" />
       <span>Design by Transformation (DxT)</span>
     </h1>
-<p>DxT is a browser-based dataflow designer for creating and editing node
-graphs. Users drag node types from a palette onto a canvas, wire outputs to
-inputs, and edit node properties in a sliding panel. Diagrams and palettes
-can be saved/loaded as JSON with schema validation.</p>
-<p>You can download or contribute to DxT at its <a href="https://github.com/triche/DxT">GitHub repository</a>.</p>
-<p>Transformations can be loaded, saved, and applied to selections based on
-external port patterns.</p>
-<h2 id="core-functionality-concise">Core Functionality (Concise)</h2>
-<ul>
-<li>Drag-and-drop node creation from a palette.</li>
-<li>Interactive wiring with draft previews and connection rules.</li>
-<li>Selection tools for nodes and wires: click, shift-click, lasso, and select-all.</li>
-<li>Clipboard: copy, paste (with wire preservation), delete nodes and wires.</li>
-<li>Property editing with immediate updates.</li>
-<li>Diagram save/load (JSON) and palette save/load.</li>
-<li>Diagram cleanup for automatic left-to-right layout.</li>
-<li>Transformation library (load, save, delete) and apply from context menu.</li>
-<li>Load Transformation button in the library to import transformation JSON files.</li>
-</ul>
-<h2 id="installation">Installation</h2>
-<pre><code class="language-bash">npm install
+    <p>
+      DxT is a browser-based dataflow designer for creating and editing
+      node graphs. Users drag node types from a palette onto a canvas, wire
+      outputs to inputs, and edit node properties in a sliding panel.
+      Diagrams and palettes can be saved/loaded as JSON with schema
+      validation.
+    </p>
+    <p>
+      You can download or contribute to DxT at its
+      <a href="https://github.com/triche/DxT">GitHub repository</a>.
+    </p>
+    <p>
+      Transformations can be loaded, saved, and applied to selections based
+      on external port patterns.
+    </p>
+    <h2 id="core-functionality-concise">Core Functionality (Concise)</h2>
+    <ul>
+      <li>Drag-and-drop node creation from a palette.</li>
+      <li>Interactive wiring with draft previews and connection rules.</li>
+      <li>
+        Selection tools for nodes and wires: click, shift-click, lasso, and
+        select-all.
+      </li>
+      <li>
+        Clipboard: copy, paste (with wire preservation), delete nodes and
+        wires.
+      </li>
+      <li>Property editing with immediate updates.</li>
+      <li>Diagram save/load (JSON) and palette save/load.</li>
+      <li>Diagram cleanup for automatic left-to-right layout.</li>
+      <li>
+        Transformation library (load, save, delete) and apply from context
+        menu.
+      </li>
+      <li>
+        Load Transformation button in the library to import transformation
+        JSON files.
+      </li>
+    </ul>
+    <h2 id="installation">Installation</h2>
+    <pre><code class="language-bash">npm install
 </code></pre>
-<h2 id="run-the-application">Run the Application</h2>
-<pre><code class="language-bash">npm run dev
+    <h2 id="run-the-application">Run the Application</h2>
+    <pre><code class="language-bash">npm run dev
 </code></pre>
-<p>Then open the local URL shown in the terminal.</p>
-<h2 id="run-with-docker-local">Run with Docker (Local)</h2>
-<h3 id="option-a-docker-cli">Option A: Docker CLI</h3>
-<pre><code class="language-bash">docker build -t dxt .
+    <p>Then open the local URL shown in the terminal.</p>
+    <h2 id="run-with-docker-local">Run with Docker (Local)</h2>
+    <h3 id="option-a-docker-cli">Option A: Docker CLI</h3>
+    <pre><code class="language-bash">docker build -t dxt .
 docker run --<span class="hljs-built_in">rm</span> -p 8080:80 dxt
 </code></pre>
-<p>Open <a href="http://localhost:8080">http://localhost:8080</a></p>
-<h3 id="option-b-docker-compose">Option B: Docker Compose</h3>
-<pre><code class="language-bash">docker compose up --build
+    <p>Open <a href="http://localhost:8080">http://localhost:8080</a></p>
+    <h3 id="option-b-docker-compose">Option B: Docker Compose</h3>
+    <pre><code class="language-bash">docker compose up --build
 </code></pre>
-<p>Open <a href="http://localhost:8080">http://localhost:8080</a></p>
-<h3 id="option-b-docker-compose-detached">Option C: Docker Compose Detached</h3>
-<pre><code class="language-bash">docker compose up -d --build
+    <p>Open <a href="http://localhost:8080">http://localhost:8080</a></p>
+    <h3 id="option-b-docker-compose-detached">
+      Option C: Docker Compose Detached
+    </h3>
+    <pre><code class="language-bash">docker compose up -d --build
 </code></pre>
-<p>Open <a href="http://localhost:8080">http://localhost:8080</a></p>
-<h2 id="build-for-production">Build for Production</h2>
-<pre><code class="language-bash">npm run build
+    <p>Open <a href="http://localhost:8080">http://localhost:8080</a></p>
+    <h2 id="build-for-production">Build for Production</h2>
+    <pre><code class="language-bash">npm run build
 </code></pre>
-<h2 id="tests">Tests</h2>
-<pre><code class="language-bash">npm <span class="hljs-built_in">test</span>
+    <h2 id="tests">Tests</h2>
+    <pre><code class="language-bash">npm <span class="hljs-built_in">test</span>
 </code></pre>
-<h2 id="basic-usage">Basic Usage</h2>
-<ol>
-<li><strong>Create nodes</strong>: Drag a node type from the palette to the canvas.</li>
-<li><strong>Wire nodes</strong>: Drag from an output port (blue) to an input port (green).</li>
-<li><strong>Move nodes</strong>: Click and drag a node on the canvas.</li>
-<li><strong>Select nodes</strong>: Click to select, Shift+click to multi-select, or drag
-on empty canvas to lasso-select.</li>
-<li><strong>Select wires</strong>: Click on a wire to select it, Shift+click to multi-select
-wires, or use lasso selection. Selected wires appear blue and thicker.</li>
-<li><strong>Delete nodes/wires</strong>: Select elements and press Delete/Backspace, or
-right-click and choose Delete from the context menu.</li>
-<li><strong>Undo</strong>: Press Ctrl/Cmd+Z to undo the last diagram change (up to 20 actions).</li>
-<li><strong>Edit properties</strong>: Select a single node to open the sliding property
-editor on the right.</li>
-<li><strong>Save/Load</strong>: Use the top bar to save or load diagrams as JSON.</li>
-<li><strong>Palette management</strong>: Create custom node types, then save/load palette
-JSON from the palette panel.</li>
-<li><strong>Save transformation</strong>: Use Save Transformation to export the current
-diagram into a transformation JSON (based on unwired ports). Choose to
-add it to the Transformation Library.</li>
-<li><strong>Apply transformation</strong>: Right-click a node selection and choose
-Apply Transformation from the context menu.</li>
-<li><strong>Diagram cleanup</strong>: Use Diagram Cleanup in the top bar to rearrange
-nodes into a clear left-to-right flow.</li>
-<li><strong>Load transformation</strong>: Use the Load Transformation button in the
-Transformation Library to import transformation JSON files into the
-library.</li>
-</ol>
-<h3 id="keyboard-shortcuts">Keyboard Shortcuts</h3>
-<ul>
-<li>Copy: Ctrl/Cmd+C (copies selected nodes)</li>
-<li>Paste: Ctrl/Cmd+V (pastes nodes with offset)</li>
-<li>Delete: Delete/Backspace (removes selected nodes and wires)</li>
-<li>Undo: Ctrl/Cmd+Z (undoes last diagram change; 20-step buffer)</li>
-<li>Select all: Ctrl/Cmd+A (selects all nodes and wires)</li>
-<li>Deselect: Escape (clears all selections)</li>
-</ul>
-<h2 id="file-formats">File Formats</h2>
-<ul>
-<li><strong>Diagram JSON</strong>: Includes diagram name, nodes, custom node definitions,
-and wires. Validated on load.</li>
-<li><strong>Palette JSON</strong>: Custom node definitions only (built-ins excluded).</li>
-<li><strong>Transformation JSON</strong>: Includes transformation name, input/output
-patterns, and replacement nodes.</li>
-</ul>
-<h2 id="project-structure">Project Structure</h2>
-<pre><code>DxT/
+    <h2 id="basic-usage">Basic Usage</h2>
+    <ol>
+      <li>
+        <strong>Create nodes</strong>: Drag a node type from the palette to
+        the canvas.
+      </li>
+      <li>
+        <strong>Wire nodes</strong>: Drag from an output port (blue) to an
+        input port (green).
+      </li>
+      <li>
+        <strong>Move nodes</strong>: Click and drag a node on the canvas.
+      </li>
+      <li>
+        <strong>Select nodes</strong>: Click to select, Shift+click to
+        multi-select, or drag on empty canvas to lasso-select.
+      </li>
+      <li>
+        <strong>Select wires</strong>: Click on a wire to select it,
+        Shift+click to multi-select wires, or use lasso selection. Selected
+        wires appear blue and thicker.
+      </li>
+      <li>
+        <strong>Delete nodes/wires</strong>: Select elements and press
+        Delete/Backspace, or right-click and choose Delete from the context
+        menu.
+      </li>
+      <li>
+        <strong>Undo</strong>: Press Ctrl/Cmd+Z to undo the last diagram
+        change (up to 20 actions).
+      </li>
+      <li>
+        <strong>Edit properties</strong>: Select a single node to open the
+        sliding property editor on the right.
+      </li>
+      <li>
+        <strong>Save/Load</strong>: Use the top bar to save or load
+        diagrams as JSON.
+      </li>
+      <li>
+        <strong>Palette management</strong>: Create custom node types, then
+        save/load palette JSON from the palette panel.
+      </li>
+      <li>
+        <strong>Save transformation</strong>: Use Save Transformation to
+        export the current diagram into a transformation JSON (based on
+        unwired ports). Choose to add it to the Transformation Library.
+      </li>
+      <li>
+        <strong>Apply transformation</strong>: Right-click a node selection
+        and choose Apply Transformation from the context menu.
+      </li>
+      <li>
+        <strong>Diagram cleanup</strong>: Use Diagram Cleanup in the top
+        bar to rearrange nodes into a clear left-to-right flow.
+      </li>
+      <li>
+        <strong>Load transformation</strong>: Use the Load Transformation
+        button in the Transformation Library to import transformation JSON
+        files into the library.
+      </li>
+    </ol>
+    <h3 id="keyboard-shortcuts">Keyboard Shortcuts</h3>
+    <ul>
+      <li>Copy: Ctrl/Cmd+C (copies selected nodes)</li>
+      <li>Paste: Ctrl/Cmd+V (pastes nodes with offset)</li>
+      <li>Delete: Delete/Backspace (removes selected nodes and wires)</li>
+      <li>
+        Undo: Ctrl/Cmd+Z (undoes last diagram change; 20-step buffer)
+      </li>
+      <li>Select all: Ctrl/Cmd+A (selects all nodes and wires)</li>
+      <li>Deselect: Escape (clears all selections)</li>
+    </ul>
+    <h2 id="file-formats">File Formats</h2>
+    <ul>
+      <li>
+        <strong>Diagram JSON</strong>: Includes diagram name, nodes, custom
+        node definitions, and wires. Validated on load.
+      </li>
+      <li>
+        <strong>Palette JSON</strong>: Custom node definitions only
+        (built-ins excluded).
+      </li>
+      <li>
+        <strong>Transformation JSON</strong>: Includes transformation name,
+        input/output patterns, and replacement nodes.
+      </li>
+    </ul>
+    <h2 id="project-structure">Project Structure</h2>
+    <pre><code>DxT/
 ├── docs/                   # Documentation
 │   ├── ImplementationOptions.md
 │   └── Theory_of_operation.md
@@ -137,18 +202,26 @@ patterns, and replacement nodes.</li>
 ├── vite.config.ts          # Vite configuration
 └── tsconfig*.json          # TypeScript configuration
 </code></pre>
-<h2 id="linting">Linting</h2>
-<pre><code class="language-bash">npm run lint
+    <h2 id="linting">Linting</h2>
+    <pre><code class="language-bash">npm run lint
 </code></pre>
-<h2 id="documentation">Documentation</h2>
-<ul>
-<li>Theory of operation: <a href="docs/Theory_of_operation.html">docs/Theory_of_operation.md</a></li>
-<li>Testing details: <a href="test/README.html">test/README.md</a></li>
-</ul>
+    <h2 id="documentation">Documentation</h2>
+    <ul>
+      <li>
+        Theory of operation:
+        <a href="docs/Theory_of_operation.html"
+          >docs/Theory_of_operation.md</a
+        >
+      </li>
+      <li>
+        Testing details: <a href="test/README.html">test/README.md</a>
+      </li>
+    </ul>
 
-<h2 id="license">License</h2>
-<p>This repository is licensed under the GNU General Public License v3.0. See <a href="../LICENSE">LICENSE</a>.</p>
-
-            
-      </body>
-    </html>
+    <h2 id="license">License</h2>
+    <p>
+      This repository is licensed under the GNU General Public License
+      v3.0. See <a href="../LICENSE">LICENSE</a>.
+    </p>
+  </body>
+</html>
