@@ -294,6 +294,13 @@ Docker build compiles the Vite app, then serves the `dist/` output with
 Nginx. This provides a lightweight, production-style runtime that runs
 locally on Docker Desktop.
 
+### 4.6 Testing (Vitest)
+
+Automated tests are run with Vitest. The default test command is
+`npm test`, and watch mode is available via `npm run test:watch`. Tests
+live under `test/` and cover validation, transformations, and application
+behavior.
+
 ## 5) UX and Visual Design
 
 - **Visual language**: Blue for outputs and selection, green for inputs.

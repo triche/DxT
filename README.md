@@ -69,10 +69,16 @@ Open http://localhost:8080
 npm run build
 ```
 
-## Tests
+## Tests (Vitest)
 
 ```bash
 npm test
+```
+
+Watch mode:
+
+```bash
+npm run test:watch
 ```
 
 ## Basic Usage
@@ -141,10 +147,15 @@ DxT/
 │   ├── App.tsx             # Main application component
 │   └── main.tsx            # Application entry point
 ├── test/                   # Test suite
-│   ├── validation-test.cjs
 │   ├── app-functionality.test.cjs
+│   ├── diagram-cleanup-cycle.test.cjs
+│   ├── diagram-cleanup.test.cjs
+│   ├── manual-internal-wiring-test.cjs
 │   ├── transformation-applicability.test.cjs
 │   ├── transformation-apply.test.cjs
+│   ├── transformation-utils.test.cjs
+│   ├── validation-format.test.cjs
+│   ├── validation-test.cjs
 │   └── run-tests.cjs
 ├── samples/                # Sample JSON files
 │   ├── diagram.json
@@ -156,6 +167,7 @@ DxT/
 ├── docker-compose.yml      # Local container orchestration
 ├── nginx.conf              # Nginx config for SPA routing
 ├── package.json            # Dependencies and scripts
+├── vitest.config.ts         # Vitest configuration
 ├── vite.config.ts          # Vite configuration
 └── tsconfig*.json          # TypeScript configuration
 ```
