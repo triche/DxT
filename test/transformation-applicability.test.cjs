@@ -1,33 +1,13 @@
-// Transformation applicability tests
-console.log('=== Transformation Applicability Tests ===\n');
+let getApplicableTransformations;
 
-function runTest(testName, testFn) {
-    try {
-        const result = testFn();
-        if (result === true || result === undefined) {
-            console.log(`✅ ${testName}: PASSED`);
-            return true;
-        }
-        console.log(`❌ ${testName}: FAILED - ${result}`);
-        return false;
-    } catch (error) {
-        console.log(`❌ ${testName}: ERROR - ${error.message}`);
-        return false;
-    }
-}
+beforeAll(async () => {
+    ({ getApplicableTransformations } = await import('../src/utils/transformation.ts'));
+});
 
 function assertTrue(condition, message = '') {
     if (!condition) {
         throw new Error(message || 'Assertion failed');
     }
-}
-
-let total = 0;
-let passed = 0;
-
-function test(name, fn) {
-    total++;
-    if (runTest(name, fn)) passed++;
 }
 
 const nodes = [
@@ -95,31 +75,26 @@ const transformations = [
     }
 ];
 
-const run = async () => {
-    const { getApplicableTransformations } = await import('../src/utils/transformation.ts');
-
-    console.log('🔁 Applicability Matching:');
-
-    test('Transformation matches external ports of selection', () => {
+test('Transformation matches external ports of selection', () => {
         const selection = ['filter-1', 'normalize-1'];
         const applicable = getApplicableTransformations(nodes, wires, selection, transformations);
         assertTrue(applicable.some(t => t.name === 'Filter + Normalize -> OptimizedFilter'), 'Expected applicable transform');
         assertTrue(!applicable.some(t => t.name === 'Mismatched Output'), 'Did not expect mismatched output transform');
     });
 
-    test('Internal wires are ignored when computing external ports', () => {
+test('Internal wires are ignored when computing external ports', () => {
         const selection = ['filter-1', 'normalize-1'];
         const applicable = getApplicableTransformations(nodes, wires, selection, transformations);
         assertTrue(!applicable.some(t => t.name === 'Double Input Needed'), 'Internal port should not count as external');
     });
 
-    test('Unconnected ports are treated as external', () => {
+test('Unconnected ports are treated as external', () => {
         const selection = ['lonely-1'];
         const applicable = getApplicableTransformations(nodes, wires, selection, transformations);
         assertTrue(applicable.some(t => t.name === 'Filter + Normalize -> OptimizedFilter'), 'Unconnected ports should still match');
     });
 
-    test('Duplicate port names are matched as a multiset', () => {
+test('Duplicate port names are matched as a multiset', () => {
         const localNodes = [
             { id: 'src-a', type: 'Source', x: 50, y: 50, properties: { name: 'Source', inputs: [], outputs: ['out'] } },
             { id: 'src-b', type: 'Source', x: 50, y: 120, properties: { name: 'Source', inputs: [], outputs: ['out'] } },
@@ -141,13 +116,4 @@ const run = async () => {
         assertTrue(applicable.length === 1, 'Expected multiset match for duplicate ports');
     });
 
-    console.log(`\n=== Test Summary: ${passed}/${total} passed ===`);
-    if (passed !== total) {
-        process.exitCode = 1;
-    }
-};
-
-run().catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-});
+// === TEST SUMMARY ===

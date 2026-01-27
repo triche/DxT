@@ -1,36 +1,15 @@
 #!/usr/bin/env node
 
-// DxT Test Runner
-console.log('🚀 DxT Test Runner\n');
-
 const { spawn } = require('child_process');
 const path = require('path');
 
 async function runTest(testFile, testName, useTsx = false) {
     return new Promise((resolve) => {
-        console.log(`📋 Running ${testName}...`);
         const command = useTsx ? 'npx' : 'node';
         const args = useTsx ? ['tsx', testFile] : [testFile];
-        const child = spawn(command, args, { cwd: path.dirname(__filename), env: process.env });
-        
-        let output = '';
-        child.stdout.on('data', (data) => {
-            output += data.toString();
-        });
-        
-        child.stderr.on('data', (data) => {
-            output += data.toString();
-        });
-        
-        child.on('close', (code) => {
-            console.log(output);
-            if (code === 0) {
-                console.log(`✅ ${testName} completed successfully\n`);
-            } else {
-                console.log(`❌ ${testName} failed with exit code ${code}\n`);
-            }
-            resolve(code === 0);
-        });
+        const child = spawn(command, args, { cwd: path.dirname(__filename), env: process.env, stdio: 'ignore' });
+
+        child.on('close', (code) => resolve(code === 0));
     });
 }
 
@@ -48,14 +27,6 @@ async function runAllTests() {
         const passed = await runTest(test.file, test.name, test.useTsx);
         if (!passed) allPassed = false;
     }
-    
-    console.log('='.repeat(60));
-    if (allPassed) {
-        console.log('🎉 All test suites passed! Your DxT application is working correctly.');
-    } else {
-        console.log('⚠️  Some test suites failed. Please review the output above.');
-    }
-    console.log('='.repeat(60));
     
     return allPassed;
 }
