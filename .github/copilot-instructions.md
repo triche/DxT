@@ -114,6 +114,7 @@ transformation library with load/apply/save capabilities.
 
 - **Default Expectation:** For any new feature or bug fix, add or update automated tests without being asked.
 - **Scope:** Cover core logic, UI interactions, and transformation behaviors as appropriate.
+- **Framework:** Use Vitest for all new automated tests.
 - **Location:** Prefer existing test suites under `test/` and align with current patterns.
 
 ## Transformation Concepts
