@@ -1,39 +1,35 @@
-/**
- * Test script to demonstrate internal wiring in transformations
- */
+const fs = require('node:fs');
+const path = require('node:path');
 
-const fs = require('fs');
+test('internal wiring transformation fixture is generated', () => {
+  const diagramPath = path.resolve(__dirname, '../samples/test_internal_wiring_diagram.json');
+  const diagramData = JSON.parse(fs.readFileSync(diagramPath, 'utf8'));
 
-// Load the test diagram
-const diagramData = JSON.parse(
-  fs.readFileSync('./samples/test_internal_wiring_diagram.json', 'utf8')
-);
+  const filterNode = diagramData.nodes.find(n => n.id === 'filter-node');
+  const normalizeNode = diagramData.nodes.find(n => n.id === 'normalize-node');
 
-// The Filter and Normalize nodes are connected internally
-const filterNode = diagramData.nodes.find(n => n.id === 'filter-node');
-const normalizeNode = diagramData.nodes.find(n => n.id === 'normalize-node');
+  expect(filterNode).toBeTruthy();
+  expect(normalizeNode).toBeTruthy();
 
-// Get wires between these nodes
-const selectedNodeIds = [filterNode.id, normalizeNode.id];
-const relevantWires = diagramData.wires.filter(w => 
-  selectedNodeIds.includes(w.fromNodeId) || selectedNodeIds.includes(w.toNodeId)
-);
+  const selectedNodeIds = [filterNode.id, normalizeNode.id];
 
-// Simulate what buildTransformationFromDiagram would do
-const selectedNodes = [filterNode, normalizeNode];
-const internalWires = diagramData.wires.filter(w => 
-  selectedNodeIds.includes(w.fromNodeId) && selectedNodeIds.includes(w.toNodeId)
-);
+  const internalWires = diagramData.wires.filter(w =>
+    selectedNodeIds.includes(w.fromNodeId) && selectedNodeIds.includes(w.toNodeId)
+  );
 
-// Create a sample transformation manually
-const transformation = {
-  name: 'Filter+Normalize Chain',
-  inputPattern: ['in'],
-  outputPattern: ['out'],
-  replacementNodes: selectedNodes,
-  internalWires: internalWires
-};
+  expect(internalWires.length).toBeGreaterThan(0);
 
-// Save to file
-const transformationPath = './samples/test_generated_transformation.json';
-fs.writeFileSync(transformationPath, JSON.stringify(transformation, null, 2));
+  const transformation = {
+    name: 'Filter+Normalize Chain',
+    inputPattern: ['in'],
+    outputPattern: ['out'],
+    replacementNodes: [filterNode, normalizeNode],
+    internalWires,
+  };
+
+  const transformationPath = path.resolve(__dirname, '../samples/test_generated_transformation.json');
+  fs.writeFileSync(transformationPath, JSON.stringify(transformation, null, 2));
+
+  const output = JSON.parse(fs.readFileSync(transformationPath, 'utf8'));
+  expect(output.internalWires.length).toBe(internalWires.length);
+});
