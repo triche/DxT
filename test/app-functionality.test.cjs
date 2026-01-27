@@ -1,35 +1,13 @@
-// Comprehensive test suite for DxT application functionality
-console.log('=== DxT Application Functionality Tests ===\n');
+const fs = require('node:fs');
+const path = require('node:path');
 
-const fs = require('fs');
-const path = require('path');
-
-// Test utilities
-function runTest(testName, testFn) {
-    try {
-        const result = testFn();
-        if (result === true || result === undefined) {
-            console.log(`✅ ${testName}: PASSED`);
-            return true;
-        } else {
-            console.log(`❌ ${testName}: FAILED - ${result}`);
-            return false;
-        }
-    } catch (error) {
-        console.log(`❌ ${testName}: ERROR - ${error.message}`);
-        return false;
-    }
-}
-
-function assertEqual(actual, expected, message = '') {
-    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-        throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}. ${message}`);
-    }
+function assertEqual(actual, expected) {
+    expect(actual).toEqual(expected);
 }
 
 function assertTrue(condition, message = '') {
     if (!condition) {
-        throw new Error(`Assertion failed: ${message}`);
+        throw new Error(message || 'Assertion failed');
     }
 }
 
@@ -56,19 +34,7 @@ const createMockNodeDef = (name, inputs, outputs) => ({
     outputs
 });
 
-// Test counters
-let totalTests = 0;
-let passedTests = 0;
-
-function test(name, fn) {
-    totalTests++;
-    if (runTest(name, fn)) {
-        passedTests++;
-    }
-}
-
 // === NODE MANAGEMENT TESTS ===
-console.log('📦 Node Management Tests:');
 
 test('Create node with valid properties', () => {
     const node = createMockNode('node1', 'Source', 50, 75);
@@ -108,7 +74,6 @@ test('Node property updates preserve other properties', () => {
 });
 
 // === WIRE MANAGEMENT TESTS ===
-console.log('\n🔌 Wire Management Tests:');
 
 test('Create valid wire connection', () => {
     const wire = createMockWire('wire1', 'source1', 0, 'sink1', 0);
@@ -254,7 +219,6 @@ test('Undo-triggered wire redraw uses post-layout rerender', () => {
 });
 
 // === CUSTOM NODE DEFINITIONS TESTS ===
-console.log('\n🏗️  Custom Node Definition Tests:');
 
 test('Create custom node definition', () => {
     const customDef = createMockNodeDef('ProcessorNode', ['input1', 'input2'], ['output1', 'output2']);
@@ -286,7 +250,6 @@ test('Built-in node definitions are preserved', () => {
 });
 
 // === PALETTE SAVE FUNCTIONALITY TESTS ===
-console.log('\n🎨 Palette Save Functionality Tests:');
 
 test('Palette save modal state initialization', () => {
     // Simulate initial state
@@ -312,7 +275,6 @@ test('Palette save filename with user input', () => {
 });
 
 // === HEADER BRANDING TESTS ===
-console.log('\n🧭 Header Branding Tests:');
 
 test('Branding bar includes logo and title', () => {
     const appPath = path.resolve(__dirname, '../src/App.tsx');
@@ -395,7 +357,6 @@ test('Palette data structure for save', () => {
 });
 
 // === SELECTION MANAGEMENT TESTS ===
-console.log('\n🎯 Selection Management Tests:');
 
 test('Single node selection', () => {
     let selectedNodeIds = [];
@@ -449,7 +410,6 @@ test('Lasso selection area', () => {
 });
 
 // === COPY/PASTE FUNCTIONALITY TESTS ===
-console.log('\n📋 Copy/Paste Functionality Tests:');
 
 test('Copy selected nodes to clipboard', () => {
     const nodes = [
@@ -510,7 +470,6 @@ test('Paste preserves wires between copied nodes', () => {
 });
 
 // === FILE FORMAT TESTS ===
-console.log('\n💾 File Format Tests:');
 
 test('Diagram save format structure', () => {
     const saveData = {
@@ -562,7 +521,6 @@ test('Diagram load uses file picker with fallback', () => {
 });
 
 // === NODE DELETION TESTS ===
-console.log('\n🗑️  Node Deletion Tests:');
 
 test('Delete selected nodes', () => {
     const nodes = [
@@ -596,7 +554,6 @@ test('Delete nodes removes connected wires', () => {
 });
 
 // === CANVAS INTERACTION TESTS ===
-console.log('\n🖱️  Canvas Interaction Tests:');
 
 test('Canvas drop zone validation', () => {
     const canvasRect = { left: 300, top: 48, width: 800, height: 600 };
@@ -622,7 +579,6 @@ test('Context menu positioning', () => {
 });
 
 // === PROPERTY EDITOR TESTS ===
-console.log('\n⚙️  Property Editor Tests:');
 
 test('Property editor data binding', () => {
     const node = createMockNode('node1', 'Source');
@@ -659,7 +615,6 @@ test('Property updates merge correctly', () => {
 });
 
 // === VALIDATION INTEGRATION TESTS ===
-console.log('\n🔍 Validation Integration Tests:');
 
 test('Load valid diagram data', () => {
     const validDiagramData = {
@@ -696,7 +651,6 @@ test('Reject invalid diagram data', () => {
 });
 
 // === TRANSFORMATION LIBRARY TESTS ===
-console.log('\n🧩 Transformation Library Tests:');
 
 test('Delete transformation removes correct entry', () => {
     const transformations = [
@@ -711,7 +665,6 @@ test('Delete transformation removes correct entry', () => {
 });
 
 // === CANVAS SCROLLING TESTS ===
-console.log('\n📜 Canvas Scrolling Tests:');
 
 test('Wire rendering accounts for canvas scroll offsets', () => {
     const canvasPath = path.resolve(__dirname, '../src/components/Canvas.tsx');
@@ -847,33 +800,3 @@ test('Canvas scroll triggers when content exceeds viewport', () => {
 });
 
 // === TEST SUMMARY ===
-console.log('\n' + '='.repeat(50));
-console.log(`📊 Test Results Summary:`);
-console.log(`Total Tests: ${totalTests}`);
-console.log(`Passed: ${passedTests}`);
-console.log(`Failed: ${totalTests - passedTests}`);
-console.log(`Success Rate: ${((passedTests / totalTests) * 100).toFixed(1)}%`);
-
-if (passedTests === totalTests) {
-    console.log('\n🎉 All tests passed! Your DxT application functionality is working correctly.');
-} else {
-    console.log('\n⚠️  Some tests failed. Please review the failing functionality.');
-}
-
-console.log('\n📝 Test Coverage Areas:');
-console.log('✅ Node Management (creation, updates, positioning)');
-console.log('✅ Wire Management (connections, validation, removal)');
-console.log('✅ Custom Node Definitions (creation, validation)');
-console.log('✅ Palette Save Functionality (modal, filename handling, state management)');
-console.log('✅ Selection Management (single, multi, lasso, clearing)');
-console.log('✅ Copy/Paste Functionality (clipboard, offset, wire preservation)');
-console.log('✅ File Format (save structure, serialization, name sanitization)');
-console.log('✅ Node Deletion (node removal, wire cleanup)');
-console.log('✅ Canvas Interaction (drop zones, context menus)');
-console.log('✅ Property Editor (data binding, updates)');
-console.log('✅ Validation Integration (valid/invalid data handling)');
-console.log('✅ Canvas Scrolling (bounds calculation, scroll triggers)');
-
-console.log('\n🔧 These tests validate the core functionality of your DxT application.');
-console.log('For UI interaction testing, run the application and test manually.');
-console.log('For validation system testing, run: npm test');

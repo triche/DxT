@@ -1,20 +1,9 @@
-// Transformation apply and export tests
-console.log('=== Transformation Apply Tests ===\n');
+let applyTransformationToSelection;
+let buildTransformationFromDiagram;
 
-function runTest(testName, testFn) {
-    try {
-        const result = testFn();
-        if (result === true || result === undefined) {
-            console.log(`✅ ${testName}: PASSED`);
-            return true;
-        }
-        console.log(`❌ ${testName}: FAILED - ${result}`);
-        return false;
-    } catch (error) {
-        console.log(`❌ ${testName}: ERROR - ${error.message}`);
-        return false;
-    }
-}
+beforeAll(async () => {
+    ({ applyTransformationToSelection, buildTransformationFromDiagram } = await import('../src/utils/transformation.ts'));
+});
 
 function assertTrue(condition, message = '') {
     if (!condition) {
@@ -22,24 +11,9 @@ function assertTrue(condition, message = '') {
     }
 }
 
-function assertEqual(actual, expected, message = '') {
-    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-        throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}. ${message}`);
-    }
+function assertEqual(actual, expected) {
+    expect(actual).toEqual(expected);
 }
-
-let total = 0;
-let passed = 0;
-
-function test(name, fn) {
-    total++;
-    if (runTest(name, fn)) passed++;
-}
-
-const run = async () => {
-    const { applyTransformationToSelection, buildTransformationFromDiagram } = await import('../src/utils/transformation.ts');
-
-    console.log('🧪 Transformation Export:');
 
     test('Unwired ports become transformation patterns', () => {
         const nodes = [
@@ -67,8 +41,6 @@ const run = async () => {
         assertEqual(transformation.outputPattern, ['out']);
         assertTrue(transformation.replacementNodes.length === 2, 'Expected nodes to be included');
     });
-
-    console.log('\n🔁 Transformation Apply:');
 
     test('Apply transformation rewires external connections', () => {
         const nodes = [
@@ -154,8 +126,6 @@ const run = async () => {
         assertTrue(result !== null, 'Expected transformation to apply');
         assertTrue(result.wires.length === 2, 'Expected only existing external wires to be rewired');
     });
-
-    console.log('\n🔗 Internal Wiring Tests:');
 
     test('buildTransformationFromDiagram captures internal wires', () => {
         const nodes = [
@@ -253,8 +223,6 @@ const run = async () => {
 
         assertTrue(result.wires.length === 4, `Expected 4 wires (2 internal + 2 external), got ${result.wires.length}`);
     });
-
-    console.log('\n🐛 Duplicate Port Name Tests:');
 
     test('Apply transformation prefers unwired output ports over internally-wired ones', () => {
         const nodes = [
@@ -369,13 +337,4 @@ const run = async () => {
         assertEqual(wiresFromSrc2[0].toPortIdx, 0, 'Both wires should go to port 0');
     });
 
-    console.log(`\n=== Test Summary: ${passed}/${total} passed ===`);
-    if (passed !== total) {
-        process.exitCode = 1;
-    }
-};
-
-run().catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-});
+// === TEST SUMMARY ===
