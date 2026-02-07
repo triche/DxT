@@ -36,6 +36,45 @@ npm run dev
 
 Then open the local URL shown in the terminal.
 
+## Desktop (Electron)
+
+DxT can run as a desktop application that points at either the Vite dev
+server or a backend served from Docker.
+
+### Dev Mode (Vite + Electron)
+
+```bash
+npm run electron:dev
+```
+
+### Preview the Production Build
+
+```bash
+npm run electron:preview
+```
+
+### Package a Desktop Build
+
+```bash
+npm run electron:dist
+```
+
+### Connecting to Your Docker Backend
+
+By default, the Electron preload exposes a backend URL to the renderer.
+Set the backend URL via environment variable before launching Electron:
+
+```bash
+DXT_BACKEND_URL=http://localhost:8080 npm run electron:dev
+```
+
+If your backend also serves the UI you want the desktop app to display,
+point Electron at it directly:
+
+```bash
+DXT_APP_URL=http://localhost:8080 npm run electron:dev
+```
+
 ## Run with Docker (Local)
 
 ### Option A: Docker CLI

@@ -6,13 +6,18 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:electron": "cross-env DXT_ELECTRON=true vite build --mode electron",
     "lint": "eslint .",
     "preview": "vite preview",
+    "electron:dev": "concurrently -k \"npm run dev\" \"wait-on http://localhost:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron electron/main.cjs\"",
+    "electron:preview": "npm run build:electron && cross-env DXT_APP_URL=dist/index.html electron electron/main.cjs",
+    "electron:dist": "npm run build:electron && electron-builder",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:validation": "vitest run test/validation-test.cjs",
     "test:app": "vitest run test/app-functionality.test.cjs"
   },
+  "main": "electron/main.cjs",
   "dependencies": {
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
@@ -23,6 +28,10 @@
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.4.1",
+    "concurrently": "^9.2.0",
+    "cross-env": "^7.0.3",
+    "electron": "^32.0.1",
+    "electron-builder": "^24.13.3",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
@@ -31,6 +40,24 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",
     "vite": "^6.3.5",
-    "vitest": "^2.1.9"
+    "vitest": "^2.1.9",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.dxt.app",
+    "productName": "DxT",
+    "icon": "public/DxT.png",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "extraMetadata": {
+      "main": "electron/main.cjs"
+    }
   }
 }

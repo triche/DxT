@@ -19,6 +19,10 @@ lerna-debug.log*
 dist/
 dist-ssr/
 build/
+dist-electron/
+electron-out/
+release/
+out/
 
 # VSCode
 .vscode/
